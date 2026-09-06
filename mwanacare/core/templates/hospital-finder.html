@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Facility Finder | MwanaCare{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Facility Finder</h1>
+        <p class="text-secondary mb-0">Find hospitals and clinics near the caregiver location.</p>
+    </div>
+    <a class="btn btn-outline-primary" href="{% url 'facility_create' %}">Add facility</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="panel">
+            <h2 class="h5">Search</h2>
+            <form method="get" class="mb-3">
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                {% endfor %}
+                <button class="btn btn-primary w-100" type="submit">Find facilities</button>
+            </form>
+            {% for facility in facilities %}
+                <div class="border-top py-2">
+                    <div class="fw-semibold">{{ facility.name }}</div>
+                    <div class="text-secondary small">{{ facility.address }}</div>
+                    <div class="small">{{ facility.phone }}</div>
+                </div>
+            {% empty %}
+                <div class="empty-state">No matching facilities.</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="map-box">
+            <iframe
+                title="Facility map"
+                width="100%"
+                height="100%"
+                style="min-height:360px;border:0"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps?q={{ query_location|default:'clinics near me'|urlencode }}&output=embed">
+            </iframe>
+        </div>
+    </div>
+</div>
+{% endblock %}

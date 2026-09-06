@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Vaccination Records | MwanaCare{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Vaccination Records</h1>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="panel">
+            <h2 class="h5">Add Record</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+                <button class="btn btn-primary w-100" type="submit">Save record</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="panel">
+            <h2 class="h5">Digital Record Book</h2>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead><tr><th>Child</th><th>Vaccine</th><th>Given</th><th>Next Due</th><th>Facility</th></tr></thead>
+                    <tbody>
+                    {% for record in records %}
+                        <tr>
+                            <td>{{ record.child.name }}</td>
+                            <td>{{ record.vaccine_name }}</td>
+                            <td>{{ record.date_given|default:"Pending" }}</td>
+                            <td>{{ record.next_due_date|default:"-" }}</td>
+                            <td>{{ record.facility|default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-secondary">No vaccination records yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

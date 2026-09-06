@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}MwanaCare{% endblock %}
+{% block content %}
+<section class="row align-items-center g-4">
+    <div class="col-lg-7">
+        <span class="badge badge-soft mb-3">Child immunization management</span>
+        <h1 class="display-5 fw-bold">MwanaCare</h1>
+        <p class="lead text-secondary">Register children, track vaccination due dates, send reminders, manage referrals, and get simple aftercare guidance in one caregiver dashboard.</p>
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" href="{% url 'signup' %}">Create account</a>
+            <a class="btn btn-outline-secondary" href="{% url 'login' %}">Login</a>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="panel">
+            <h2 class="h5">Core workflows</h2>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Child profiles and caregiver contact details</li>
+                <li class="list-group-item">Digital vaccine records with upcoming dates</li>
+                <li class="list-group-item">In-app and WhatsApp reminder dispatch</li>
+                <li class="list-group-item">Facility finder and referral follow-up</li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}

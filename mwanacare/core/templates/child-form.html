@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} | MwanaCare{% endblock %}
+{% block content %}
+<div class="panel">
+    <h1 class="h4 mb-3">{{ title }}</h1>
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="col-md-6">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div class="col-12">
+            <button class="btn btn-primary" type="submit">Save child</button>
+            <a class="btn btn-outline-secondary" href="{% url 'children' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

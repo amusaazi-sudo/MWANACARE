@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Children | MwanaCare{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Children</h1>
+        <p class="text-secondary mb-0">Manage child registration and profiles.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'child_create' %}">Add child</a>
+</div>
+<div class="row g-3">
+    {% for child in children %}
+        <div class="col-md-6 col-xl-4">
+            <div class="panel h-100">
+                <h2 class="h5">{{ child.name }}</h2>
+                <p class="mb-1"><strong>Date of birth:</strong> {{ child.date_of_birth }}</p>
+                <p class="mb-3"><strong>Gender:</strong> {{ child.get_gender_display }}</p>
+                <a class="btn btn-outline-primary btn-sm" href="{% url 'child_update' child.pk %}">Edit profile</a>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12"><div class="empty-state">No child profiles yet.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}
