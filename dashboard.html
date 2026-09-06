@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MwanaCare{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+
+  <div class="topbar">
+    <div class="topbar-heading">
+      <h1>Dashboard</h1>
+      <p>Karibu, {{ guardian_name|default:"Beatrice" }}</p>
+    </div>
+    <img class="avatar" src="{{ guardian_photo_url|default:'https://i.pravatar.cc/100?img=47' }}" alt="Guardian avatar">
+  </div>
+
+  <!-- Child summary card -->
+  <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding: 16px 18px;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <img src="{{ child_photo_url|default:'https://i.pravatar.cc/100?img=68' }}" alt="{{ child_name|default:'Amara Okafor' }}"
+           style="width:52px; height:52px; border-radius:16px; object-fit:cover;">
+      <div>
+        <div style="font-weight:700; font-size:15.5px;">{{ child_name|default:"Amara Okafor" }}</div>
+        <div style="font-size:12.5px; color:var(--ink-600);">{{ child_sex|default:"Female" }} · {{ child_age|default:"14 months" }}</div>
+      </div>
+    </div>
+    <span class="badge badge-green">
+      <svg width="12" height="12"><use href="#icon-check"/></svg> {{ vaccination_status|default:"UP TO DATE" }}
+    </span>
+  </div>
+
+  <!-- Health summary -->
+  <div class="card">
+    <h2>{{ child_first_name|default:"Amara" }}'s Health Summary</h2>
+
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <span style="font-size:13.5px; color:var(--ink-600);">Vaccination Completed</span>
+      <span style="font-size:16px; font-weight:700; color:var(--teal-600);">{{ vaccination_pct|default:"75" }}%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: {{ vaccination_pct|default:'75' }}%;"></div>
+    </div>
+
+    <div class="stat-pair">
+      <div class="stat-box">
+        <div class="stat-label">Weight ({{ weight_percentile|default:"50th" }} percentile)</div>
+        <div class="stat-value">{{ weight_kg|default:"9.8" }} kg</div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid #f0f4f2;">
+      <span style="width:32px; height:32px; border-radius:50%; background:var(--amber-100); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <svg width="17" height="17" style="color:var(--amber-600);"><use href="#icon-alert"/></svg>
+      </span>
+      <div>
+        <div style="font-size:13.5px; font-weight:600;">Vitamin A Supplement</div>
+        <div style="font-size:12px; color:var(--ink-600);">Next dose due {{ vitamin_a_due|default:"this month (15 months)" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title-row">
+    <h3>Upcoming Reminders</h3>
+    <a class="link-sm" href="{% url 'reminder' %}">See All</a>
+  </div>
+
+  {% for r in upcoming_reminders|default:default_reminders %}
+  <div class="timeline-item {% if r.status == 'PENDING' %}pending{% endif %}" style="margin-bottom: 10px;">
+    <div class="row-top">
+      <strong>{{ r.title }}</strong>
+      <span class="badge badge-amber">{{ r.status|default:"SCHEDULED" }}</span>
+    </div>
+    <div class="meta">{{ r.date }} · {{ r.time }} · {{ r.location }}</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(15,61,53,0.06);">
+      <span style="font-size:12px; color:var(--ink-600);">Delivery channels:</span>
+      <span style="display:flex; gap:8px; color: var(--teal-600);">
+        <svg width="16" height="16"><use href="#icon-alert"/></svg>
+        <svg width="16" height="16"><use href="#icon-chat"/></svg>
+      </span>
+    </div>
+  </div>
+  {% empty %}
+  <div class="timeline-item">
+    <div class="row-top">
+      <strong>Measles-Rubella Dose 2</strong>
+      <span class="badge badge-amber">SCHEDULED</span>
+    </div>
+    <div class="meta">15 Oct 2026 · 10:00 AM · Kilimani Clinic</div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
