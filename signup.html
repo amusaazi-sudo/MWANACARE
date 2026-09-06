@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Join MwanaCare{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block content %}
+<div class="screen" style="padding-top: 12px;">
+
+  <div class="splash-icon" style="width:64px; height:64px; margin: 8px auto 16px;">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <circle cx="9" cy="10.5" r="0.8" fill="white"/>
+      <circle cx="15" cy="10.5" r="0.8" fill="white"/>
+      <path d="M8.5 14.5c1 1.2 5 1.2 6.5-.3" fill="none"/>
+    </svg>
+  </div>
+
+  <h1 class="brand-title">MwanaCare</h1>
+  <p class="brand-sub">Your child's health, simplified</p>
+
+  <div class="card">
+    <h2>Join our community</h2>
+    <p style="font-size: 13.5px; color: var(--ink-600); line-height:1.6; margin: 0 0 18px;">
+      Connect with clinics, track childhood immunisation schedules, and access
+      peer-reviewed guidance.
+    </p>
+
+    <form method="post" action="{% url 'signup' %}">
+      {% csrf_token %}
+
+      <div class="field">
+        <label for="guardian_name">Parent / Guardian Name</label>
+        <div class="input-wrap">
+          <svg width="18" height="18"><use href="#icon-user"/></svg>
+          <input id="guardian_name" name="guardian_name" type="text" placeholder="e.g., Beatrice Okafor" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="phone">Phone Number</label>
+        <div class="input-wrap">
+          <svg width="18" height="18"><use href="#icon-phone"/></svg>
+          <input id="phone" name="phone" type="tel" placeholder="e.g., +254 712 345678" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email Address (Optional)</label>
+        <div class="input-wrap">
+          <svg width="18" height="18"><use href="#icon-mail"/></svg>
+          <input id="email" name="email" type="email" placeholder="e.g., parent@mwanacare.com">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <svg width="18" height="18"><use href="#icon-lock"/></svg>
+          <input id="password" name="password" type="password" placeholder="Create a password" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="margin-top: 6px;">Create account</button>
+    </form>
+
+    <p style="text-align:center; font-size: 13px; color: var(--ink-600); margin: 16px 0 0;">
+      Already registered? <a href="{% url 'signup' %}?mode=login" style="color: var(--teal-600); font-weight:600;">Log in</a>
+    </p>
+  </div>
+
+</div>
+{% endblock %}

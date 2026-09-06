@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Referrals — MwanaCare{% endblock %}
+
+{% block content %}
+<div class="screen">
+
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">
+      <svg width="18" height="18"><use href="#icon-arrow-left"/></svg>
+    </button>
+    <div class="topbar-heading" style="text-align:right;">
+      <h1>Referrals</h1>
+      <p>Clinical transfer tracking</p>
+    </div>
+    <img class="avatar" src="{{ guardian_photo_url|default:'https://i.pravatar.cc/100?img=47' }}" alt="Guardian avatar">
+  </div>
+
+  <div class="section-title-row" style="margin-top:0;">
+    <h3>Active Referrals</h3>
+  </div>
+
+  {% for r in active_referrals|default:default_active %}
+  <div class="card">
+    <div class="row-top" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+      <strong style="font-size:15.5px;">{{ r.hospital }}</strong>
+      <span class="badge badge-amber">{{ r.status }}</span>
+    </div>
+    <div class="meta" style="font-size:13px; color:var(--ink-600); margin-bottom:2px;">Department: {{ r.department }}</div>
+    <div class="meta" style="font-size:13px; color:var(--ink-600); margin-bottom:6px;">Date: {{ r.date }}</div>
+    <div style="font-size:13px; font-weight:600; color:var(--teal-600); margin-bottom:4px;">Linked: {{ r.linked }}</div>
+    <div style="font-size:12px; color:var(--ink-400);">Referring: {{ r.referring }}</div>
+  </div>
+  {% empty %}
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+      <strong style="font-size:15.5px;">Kenyatta National Hospital</strong>
+      <span class="badge badge-amber">PENDING</span>
+    </div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:2px;">Department: Paediatrics Specialist OPD</div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:6px;">Date: 12 Sep 2026</div>
+    <div style="font-size:13px; font-weight:600; color:var(--teal-600); margin-bottom:4px;">Linked: Measles-Rubella vaccine followup</div>
+    <div style="font-size:12px; color:var(--ink-400);">Referring: Dr. Amina Kilimani (Kilimani Health Centre)</div>
+  </div>
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+      <strong style="font-size:15.5px;">Nairobi West Hospital</strong>
+      <span class="badge badge-amber">IN PROGRESS</span>
+    </div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:2px;">Department: Child Nutrition Clinic</div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:6px;">Date: 04 Sep 2026</div>
+    <div style="font-size:13px; font-weight:600; color:var(--teal-600); margin-bottom:4px;">Linked: Growth monitoring anomaly assessment</div>
+    <div style="font-size:12px; color:var(--ink-400);">Referring: Dr. Mark Kiprop (Kenyatta National Hospital)</div>
+  </div>
+  {% endfor %}
+
+  <div class="section-title-row">
+    <h3>Past Referrals</h3>
+  </div>
+
+  {% for r in past_referrals|default:default_past %}
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+      <strong style="font-size:15.5px;">{{ r.hospital }}</strong>
+      <span class="badge badge-green"><svg width="12" height="12"><use href="#icon-check"/></svg> {{ r.status|default:"COMPLETED" }}</span>
+    </div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:2px;">Department: {{ r.department }}</div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:6px;">Date: {{ r.date }}</div>
+    <div style="font-size:13px; font-weight:600; color:var(--teal-600); margin-bottom:4px;">Linked: {{ r.linked }}</div>
+    <div style="font-size:12px; color:var(--ink-400);">Referring: {{ r.referring }}</div>
+  </div>
+  {% empty %}
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+      <strong style="font-size:15.5px;">Gertrude's Children Hospital</strong>
+      <span class="badge badge-green"><svg width="12" height="12"><use href="#icon-check"/></svg> COMPLETED</span>
+    </div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:2px;">Department: Neonatal Special Care Unit</div>
+    <div style="font-size:13px; color:var(--ink-600); margin-bottom:6px;">Date: 15 Oct 2025</div>
+    <div style="font-size:13px; font-weight:600; color:var(--teal-600); margin-bottom:4px;">Linked: Post-birth BCG vaccine reaction check</div>
+    <div style="font-size:12px; color:var(--ink-400);">Referring: Dr. Sarah Wanjiku (Nairobi West Clinic)</div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

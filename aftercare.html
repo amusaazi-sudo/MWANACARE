@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Aftercare Assistant — MwanaCare{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block content %}
+<div class="screen" style="padding-bottom: 160px;">
+
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">
+      <svg width="18" height="18"><use href="#icon-arrow-left"/></svg>
+    </button>
+    <div class="topbar-heading" style="text-align:right;">
+      <h1>Aftercare Assistant</h1>
+      <p>General guidance, not a diagnosis</p>
+    </div>
+    <span class="avatar" style="background:var(--teal-600); display:flex; align-items:center; justify-content:center;">
+      <svg width="20" height="20" style="color:#fff;"><use href="#icon-chat"/></svg>
+    </span>
+  </div>
+
+  <div class="card" style="background:var(--teal-50); box-shadow:none; padding:14px 16px; display:flex; gap:10px; align-items:flex-start;">
+    <svg width="18" height="18" style="color:var(--teal-800); flex-shrink:0; margin-top:2px;"><use href="#icon-alert"/></svg>
+    <p style="margin:0; font-size:12.5px; color:var(--teal-800); line-height:1.5;">
+      This assistant gives general, evidence-based information only. It cannot diagnose your child.
+      For anything urgent or worsening, contact a healthcare professional right away.
+    </p>
+  </div>
+
+  <div class="chat-scroll" style="margin-top:8px;">
+
+    <div class="bubble ai">
+      Hi {{ guardian_first_name|default:"Beatrice" }}! I saw that {{ child_first_name|default:"Amara" }} had her
+      <strong>Pentavalent Dose 3</strong> earlier today. How is she doing?
+    </div>
+
+    <div class="bubble user">
+      She has a slight fever and the injection spot looks a bit swollen.
+    </div>
+
+    <div class="bubble ai">
+      That's a common reaction after this vaccine and usually settles within 1–2 days. You can:
+      <br>• Offer extra fluids and breastmilk/formula as usual
+      <br>• Apply a clean, cool cloth to the injection site
+      <br>• Give paracetamol if advised by your clinic, at the correct dose for her weight
+    </div>
+
+    <div class="bubble alert">
+      ⚠ Seek care immediately if: fever is above 39°C, she is unusually drowsy or hard to wake,
+      has difficulty breathing, or swelling spreads beyond the injection site.
+    </div>
+
+    <div class="bubble ai">
+      Would you like me to help you book a follow-up at Kilimani Health Centre, or set a check-in reminder for tomorrow?
+    </div>
+
+  </div>
+
+</div>
+
+<div class="chat-input-bar">
+  <input type="text" placeholder="Ask about symptoms, care, or next steps...">
+  <button class="chat-send" type="button">
+    <svg width="17" height="17"><use href="#icon-send"/></svg>
+  </button>
+</div>
+{% endblock %}

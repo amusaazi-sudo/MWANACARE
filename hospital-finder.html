@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Hospital Search — MwanaCare{% endblock %}
+{% block nav_hospital %}active{% endblock %}
+
+{% block content %}
+<div class="screen">
+
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">
+      <svg width="18" height="18"><use href="#icon-arrow-left"/></svg>
+    </button>
+    <div class="topbar-heading" style="text-align:right;">
+      <h1>Hospital Search</h1>
+      <p>Find verified care nearby</p>
+    </div>
+    <img class="avatar" src="{{ guardian_photo_url|default:'https://i.pravatar.cc/100?img=47' }}" alt="Guardian avatar">
+  </div>
+
+  <div class="map-wrap">
+    <span class="map-pill">{{ clinic_count|default:"3" }} clinics found nearby</span>
+    <img src="{{ map_image_url|default:'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=60' }}" alt="Map of nearby clinics" style="height:190px; object-fit:cover;">
+  </div>
+
+  <div class="search-bar">
+    <svg width="18" height="18"><use href="#icon-search"/></svg>
+    <input type="text" name="q" placeholder="Search hospitals, clinics...">
+  </div>
+
+  <div class="chip-row">
+    <button class="btn-chip active" type="button">Nearby</button>
+    <button class="btn-chip" type="button">Vaccination</button>
+    <button class="btn-chip" type="button">Paediatrics</button>
+    <button class="btn-chip" type="button">Emergency</button>
+  </div>
+
+  {% for h in hospitals|default:default_hospitals %}
+  <div class="hospital-card">
+    <div class="top-row">
+      <span class="tag">{{ h.type|default:"PUBLIC HOSPITAL" }}</span>
+      <span class="rating"><svg width="14" height="14"><use href="#icon-star"/></svg> {{ h.rating|default:"4.8" }}</span>
+    </div>
+    <h4>{{ h.name }}</h4>
+    <div class="sub">{{ h.distance }} away · {{ h.address }}</div>
+    <div>
+      {% for s in h.services %}<span class="tag">{{ s }}</span>{% endfor %}
+    </div>
+    <a href="{% url 'referral' %}" class="link-sm">View Details</a>
+  </div>
+  {% empty %}
+  <div class="hospital-card">
+    <div class="top-row">
+      <span class="tag">PUBLIC HOSPITAL</span>
+      <span class="rating"><svg width="14" height="14"><use href="#icon-star"/></svg> 4.8</span>
+    </div>
+    <h4>Kenyatta National Hospital</h4>
+    <div class="sub">2.5 km away · Hospital Rd, Nairobi</div>
+    <div>
+      <span class="tag">Paediatrics</span><span class="tag">Immunisation</span><span class="tag">Emergency</span>
+    </div>
+    <a href="{% url 'referral' %}" class="link-sm">View Details</a>
+  </div>
+  <div class="hospital-card">
+    <div class="top-row">
+      <span class="tag">PRIVATE HOSPITAL</span>
+      <span class="rating"><svg width="14" height="14"><use href="#icon-star"/></svg> 4.6</span>
+    </div>
+    <h4>Gertrude's Children's Hospital</h4>
+    <div class="sub">3.1 km away · Muthaiga Rd, Nairobi</div>
+    <div>
+      <span class="tag">Paediatrics</span><span class="tag">Immunisation</span>
+    </div>
+    <a href="{% url 'referral' %}" class="link-sm">View Details</a>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
