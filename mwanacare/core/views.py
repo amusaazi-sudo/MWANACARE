@@ -1,26 +1,34 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import (
-    ChildForm,
-    FacilityForm,
     FacilitySearchForm,
-    ImmunizationRecordForm,
+    NoteForm,
     ParentProfileForm,
     ReferralCompletionForm,
     ReferralForm,
-    ReminderForm,
     SignUpForm,
 )
-from .models import Child, Facility, ImmunizationRecord, ParentProfile, Referral, Reminder
-from .services import dispatch_whatsapp_message, post_immunization_answer
+from .models import Child, Facility, ImmunizationRecord, LANGUAGE_CHOICES, Note, ParentProfile, Referral, Reminder
+from .services import (
+    dispatch_whatsapp_message,
+    forward_note_to_whatsapp,
+    post_immunization_answer,
+    sync_due_reminders,
+)
 
 
 def get_parent_profile(user):
-    profile, _ = ParentProfile.objects.get_or_create(user=user)
+    profile = ParentProfile.objects.filter(user=user).first()
+    if profile is not None:
+        return profile
+    # Safety net for accounts (e.g. staff/superusers) that were never linked to a
+    # facility-provided record. Ordinary caregivers get linked at signup instead.
+    profile, _ = ParentProfile.objects.get_or_create(user=user, phone_number=f"unset-{user.pk}")
     return profile
 
 
@@ -32,15 +40,29 @@ def signup(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            ParentProfile.objects.create(
-                user=user,
-                phone_number=form.cleaned_data.get("phone_number", ""),
-                location=form.cleaned_data.get("location", ""),
-            )
-            login(request, user)
-            messages.success(request, "Your MwanaCare account is ready.")
-            return redirect("dashboard")
+            phone_number = form.cleaned_data["phone_number"]
+            profile = ParentProfile.objects.filter(phone_number=phone_number).first()
+            if profile is None:
+                form.add_error(
+                    "phone_number",
+                    "We couldn't find any records for this phone number. "
+                    "Please confirm it with your health facility, or ask them to register you first.",
+                )
+            elif profile.user_id is not None:
+                form.add_error(
+                    "phone_number",
+                    "An account is already linked to this phone number. Please log in instead.",
+                )
+            else:
+                user = form.save()
+                profile.user = user
+                profile.save(update_fields=["user"])
+                login(request, user)
+                messages.success(
+                    request,
+                    "Your MwanaCare account is now linked to the records your health facility has on file.",
+                )
+                return redirect("dashboard")
     else:
         form = SignUpForm()
     return render(request, "signup.html", {"form": form})
@@ -55,11 +77,7 @@ def dashboard(request):
         child__parent=profile,
         next_due_date__gte=today,
     ).order_by("next_due_date")[:6]
-    reminders = Reminder.objects.filter(
-        child__parent=profile,
-        due_date__gte=today,
-        sent=False,
-    ).order_by("due_date")[:6]
+    reminders = sync_due_reminders(profile).filter(sent=False)[:6]
     recent_visits = Referral.objects.filter(
         child__parent=profile,
         status="Completed",
@@ -100,96 +118,76 @@ def child_list(request):
 
 
 @login_required
-def child_create(request):
+def records(request):
+    """Overview: pick which child's health record to view. No data entry here --
+    vaccination history comes entirely from the facility via the admin."""
     profile_obj = get_parent_profile(request.user)
-    if request.method == "POST":
-        form = ChildForm(request.POST)
-        if form.is_valid():
-            child = form.save(commit=False)
-            child.parent = profile_obj
-            child.save()
-            messages.success(request, f"{child.name}'s profile was added.")
-            return redirect("children")
-    else:
-        form = ChildForm()
-    return render(request, "child-form.html", {"form": form, "title": "Register Child"})
+    children = Child.objects.filter(parent=profile_obj)
+    if children.count() == 1:
+        return redirect("child_health_record", pk=children.first().pk)
+    return render(request, "records.html", {"children": children})
 
 
 @login_required
-def child_update(request, pk):
+def child_health_record(request, pk):
     profile_obj = get_parent_profile(request.user)
     child = get_object_or_404(Child, pk=pk, parent=profile_obj)
-    if request.method == "POST":
-        form = ChildForm(request.POST, instance=child)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Child profile updated.")
-            return redirect("children")
-    else:
-        form = ChildForm(instance=child)
-    return render(request, "child-form.html", {"form": form, "title": "Edit Child Profile"})
-
-
-@login_required
-def records(request):
-    profile_obj = get_parent_profile(request.user)
-    if request.method == "POST":
-        form = ImmunizationRecordForm(request.POST, parent_profile=profile_obj)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Vaccination record saved.")
-            return redirect("records")
-    else:
-        form = ImmunizationRecordForm(parent_profile=profile_obj)
-
-    records_qs = ImmunizationRecord.objects.filter(child__parent=profile_obj).order_by("next_due_date", "child__name")
-    return render(request, "records.html", {"form": form, "records": records_qs})
+    immunizations = ImmunizationRecord.objects.filter(child=child).order_by("next_due_date", "date_given")
+    return render(
+        request,
+        "health-record.html",
+        {
+            "child": child,
+            "immunizations": immunizations,
+            "growth": child.latest_growth_measurement(),
+        },
+    )
 
 
 @login_required
 def reminders(request):
+    """Reminders are derived automatically from each child's due/overdue
+    vaccinations -- there is nothing for a caregiver to type in here."""
     profile_obj = get_parent_profile(request.user)
     if request.method == "POST":
-        form = ReminderForm(request.POST, parent_profile=profile_obj)
-        if form.is_valid():
-            reminder = form.save()
-            result = dispatch_whatsapp_message(reminder.child.parent.phone_number, reminder.message)
-            messages.success(request, result.detail)
-            return redirect("reminders")
-    else:
-        form = ReminderForm(parent_profile=profile_obj)
+        reminder = get_object_or_404(Reminder, pk=request.POST.get("reminder_id"), child__parent=profile_obj)
+        result = dispatch_whatsapp_message(profile_obj.phone_number, reminder.message)
+        reminder.sent = result.sent
+        reminder.save(update_fields=["sent"])
+        messages.success(request, result.detail)
+        return redirect("reminders")
 
-    reminder_list = Reminder.objects.filter(child__parent=profile_obj).order_by("due_date")
-    return render(request, "reminder.html", {"form": form, "reminders": reminder_list})
+    reminder_list = sync_due_reminders(profile_obj)
+    return render(request, "reminder.html", {"reminders": reminder_list})
 
 
 @login_required
 def facility_finder(request):
     form = FacilitySearchForm(request.GET or None)
     facilities = Facility.objects.all().order_by("name")
-    query_location = ""
+    query = ""
     if form.is_valid():
-        query_location = form.cleaned_data.get("location") or ""
-        if query_location:
-            facilities = facilities.filter(location__icontains=query_location)
+        query = form.cleaned_data.get("location") or ""
+        if query:
+            facilities = facilities.filter(
+                Q(name__icontains=query) | Q(location__icontains=query) | Q(address__icontains=query)
+            )
+
+    active_tag = request.GET.get("tag", "")
+    if active_tag:
+        facilities = facilities.filter(services__icontains=active_tag)
+
     return render(
         request,
         "hospital-finder.html",
-        {"form": form, "facilities": facilities, "query_location": query_location},
+        {
+            "form": form,
+            "facilities": facilities,
+            "query_location": query,
+            "active_tag": active_tag,
+            "filter_tags": ["Vaccination", "Paediatrics", "Emergency"],
+        },
     )
-
-
-@login_required
-def facility_create(request):
-    if request.method == "POST":
-        form = FacilityForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Facility added.")
-            return redirect("facility_finder")
-    else:
-        form = FacilityForm()
-    return render(request, "facility-form.html", {"form": form})
 
 
 @login_required
@@ -229,10 +227,50 @@ def referral_update(request, pk):
 
 
 @login_required
-def aftercare(request):
+def mwanaai(request):
     answer = None
     question = ""
+    language = request.POST.get("language") or "en"
     if request.method == "POST":
         question = request.POST.get("question", "")
-        answer = post_immunization_answer(question)
-    return render(request, "aftercare.html", {"answer": answer, "question": question})
+        answer = post_immunization_answer(question, language)
+    return render(
+        request,
+        "mwanaai.html",
+        {
+            "answer": answer,
+            "question": question,
+            "language": language,
+            "language_choices": LANGUAGE_CHOICES,
+        },
+    )
+
+
+@login_required
+def notes(request):
+    profile_obj = get_parent_profile(request.user)
+    if request.method == "POST":
+        form = NoteForm(request.POST)
+        if form.is_valid():
+            note = form.save(commit=False)
+            note.parent = profile_obj
+            note.save()
+            messages.success(request, "Note saved.")
+            return redirect("notes")
+    else:
+        form = NoteForm()
+
+    note_list = Note.objects.filter(parent=profile_obj)
+    return render(request, "notes.html", {"form": form, "notes": note_list})
+
+
+@login_required
+def note_forward(request, pk):
+    profile_obj = get_parent_profile(request.user)
+    note = get_object_or_404(Note, pk=pk, parent=profile_obj)
+    if request.method == "POST":
+        result = forward_note_to_whatsapp(note)
+        note.forwarded_to_whatsapp = result.sent
+        note.save(update_fields=["forwarded_to_whatsapp"])
+        messages.success(request, result.detail)
+    return redirect("notes")

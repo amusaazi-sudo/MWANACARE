@@ -9,7 +9,6 @@
         </h1>
         <p class="text-secondary mb-0">Children, upcoming vaccinations, reminders, and recent referral visits.</p>
     </div>
-    <a class="btn btn-primary px-4" href="{% url 'child_create' %}">REGISTER CHILD</a>
 </div>
 
 <div class="row g-3 mb-4">
@@ -24,8 +23,8 @@
             <h2 class="h5">Children</h2>
             {% for child in children %}
                 <div class="d-flex justify-content-between border-top py-2">
-                    <span>{{ child.name }}</span>
-                    <a href="{% url 'child_update' child.pk %}">Edit</a>
+                    <span>{{ child.name }} <span class="text-secondary small">&middot; {{ child.age_display }}</span></span>
+                    <a href="{% url 'child_health_record' child.pk %}">View record</a>
                 </div>
             {% empty %}
                 <div class="empty-state">No children registered yet.</div>
@@ -49,9 +48,14 @@
         <div class="panel h-100">
             <h2 class="h5">Reminders</h2>
             {% for reminder in reminders %}
-                <div class="border-top py-2">
-                    <div>{{ reminder.message }}</div>
-                    <div class="text-secondary small">{{ reminder.child.name }} - {{ reminder.due_date }}</div>
+                <div class="d-flex justify-content-between align-items-center gap-2 border-top py-2">
+                    <div>
+                        <div>{{ reminder.message }}</div>
+                        <div class="text-secondary small">{{ reminder.child.name }} - {{ reminder.due_date }}</div>
+                    </div>
+                    <span class="pill {% if reminder.urgency == 'overdue' %}pill-overdue{% else %}pill-due-soon{% endif %}">
+                        {% if reminder.urgency == 'overdue' %}OVERDUE{% else %}DUE SOON{% endif %}
+                    </span>
                 </div>
             {% empty %}
                 <div class="empty-state">No active reminders.</div>

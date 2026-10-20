@@ -9,6 +9,10 @@
             Join MwanaCare
         </h1>
         <hr>
+        <p class="text-secondary text-start">
+            Your caregiver and child records are already registered by your health facility.
+            Sign up with the phone number on file to link your account to them.
+        </p>
         <form method="post" novalidate>
             {% csrf_token %}
             {% for field in form %}
