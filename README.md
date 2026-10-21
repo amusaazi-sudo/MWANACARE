@@ -1,116 +1,116 @@
 # MwanaCare
 
-MwanaCare is a Django web app that helps caregivers track their children's immunizations, growth, and referrals, and helps them find and reach partner health facilities.
+*One companion, from home to clinic and back.*
 
-**Core idea:** caregivers never type in medical data. Partner hospitals/clinics enter parent, child, vaccination, and growth records ahead of time (via the Django admin); a caregiver's account is only *linked* to the records their facility already has, by matching phone number at signup. Reminders are generated automatically from the vaccination schedule — there's no "add reminder" form.
+MwanaCare is a Django web app that helps parents and caregivers stay on top of their children's immunizations: it reminds them when vaccinations are due, keeps a digital health record, helps them find nearby partner health facilities, and gives safe after-vaccination guidance in English, Kiswahili and Luganda.
+
+First built for the **Absa Girl Code Hackathon**, and still being improved.
+
+**My role:** founder and lead developer. I came up with MwanaCare and designed and built the Django application: the data models, phone-number account linking, the admin workflow for clinics, reminders, the facility finder, MwanaAI and Mwana Notes.
+
+## The problem
+
+Immunization journeys are fragmented and stressful for families. Parents forget vaccination dates, paper records get lost, and health facilities are hard to find. The result: children miss vaccines they need, leading to preventable illness.
+
+MwanaCare follows the whole journey in one place: **remember → find → visit → record → understand → return**.
+
+## Screenshots
+
+| Dashboard | Health record | Facility finder |
+|---|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Health record](docs/screenshots/health-record.png) | ![Facility finder](docs/screenshots/facility-finder.png) |
+
+## Features
+
+| Page | What it does |
+|---|---|
+| **Dashboard** | Children, upcoming vaccinations, active reminders and recent completed referral visits |
+| **Health Records** | Blood type, allergies, latest growth measurement with percentiles, and a vaccination timeline with status labels (Completed / Due soon / Overdue / Upcoming) |
+| **Reminders** | Generated automatically from the vaccination schedule. A banner follows the caregiver across the site, turning red once a vaccination is overdue, until the reminder is resolved |
+| **Facility finder** | Search and filter partner facilities, see them on a live map, and sort by distance using the phone's location |
+| **Referrals** | Request a referral for a child to a facility, then record visit notes afterwards |
+| **MwanaAI** | Answers common after-vaccination and child-health questions in English, Kiswahili or Luganda, typed or spoken |
+| **Mwana Notes** | Caregivers record health notes, bills paid or debts, by typing or voice, and send a copy to WhatsApp |
+
+## Key design decisions
+
+- **Caregivers never type in medical data.** Partner clinics enter records through the Django admin. At signup, a caregiver's account is linked to their facility's records by matching their phone number. This keeps medical data accurate and trustworthy.
+- **MwanaAI is deliberately not a language model.** In a health setting, predictable answers matter more than clever ones, so MwanaAI uses keyword matching with fixed, pre-written answers. It gives general guidance and tells caregivers when to seek care, and never tries to diagnose.
+- **No paid APIs needed.** Maps use Leaflet and OpenStreetMap, and voice input uses the browser's built-in speech recognition, so the app runs without API keys.
 
 ## Tech stack
 
-- Python 3, Django 6.1
-- SQLite (default dev database)
-- Bootstrap 5 (via CDN) for styling
-- Leaflet + OpenStreetMap (via CDN, no API key) for the facility map
+- **Backend:** Python 3, Django 6.1, SQLite for development
+- **Frontend:** Django templates with a shared `base.html`, Bootstrap 5
+- **Maps:** Leaflet + OpenStreetMap
+- **Voice input:** the browser's `SpeechRecognition` API (Chrome and Edge)
+- **Collaboration:** Git and GitHub with feature branches and pull requests
 
-## Project layout
+## Since the hackathon
 
-```
-mwanacare/
-  manage.py
-  requirements.txt
-  db.sqlite3              # dev database (created by migrate)
-  mwanacare/               # project settings, root urls
-  core/                    # the app: models, views, forms, admin, templates
-    models.py              # ParentProfile, Child, Facility, ImmunizationRecord,
-                            # GrowthMeasurement, Referral, Reminder, Note
-    admin.py                # where hospital staff enter caregiver/child/vaccine data
-    views.py, urls.py, forms.py
-    services.py             # WhatsApp dispatch stub, aftercare-question guidance,
-                            # auto-reminder generation
-    templates/
-```
+At the hackathon I focused on a clickable prototype of the core journey and documented the bigger integrations as a roadmap. Since then the app has gained real data models, phone-number account linking, automatic reminders with the site-wide banner, the live facility map with distance sorting, MwanaAI in three languages, voice input, and Mwana Notes.
 
-## Setup
+## Challenges
+
+1. **Turning screen-by-screen mockups into reusable templates.** I identified what repeated across screens (navigation, cards, badges) and moved it into `base.html` and shared styles instead of copying it into every page.
+2. **Designing screens that didn't exist in the mockups.** The user journey needed both a vaccination schedule and a full health record, so I designed the missing screen myself and kept it consistent with the rest.
+3. **Keeping health guidance safe.** MwanaAI had to help without ever sounding like a doctor: general guidance with clear advice on when to visit a clinic.
+4. **Three people, one repository.** Early on we overwrote each other's work by all committing to `main`. We switched to feature branches and pull requests, with each person owning specific files.
+
+## Status and roadmap
+
+MwanaCare is a working prototype. My next focus is **polishing the user experience**: making each feature simpler and clearer to use.
+
+| Phase | Goal |
+|---|---|
+| 1. MVP | Child profiles, vaccination records, automatic reminders, facility finder and aftercare guidance (in progress) |
+| 2. Facility dashboards | Analytics and dashboards for health facilities |
+| 3. USSD and SMS | Access for caregivers with feature phones |
+| 4. Full ecosystem | Connections with pharmacies, labs, insurers and other partners |
+
+Also planned: sending real WhatsApp messages through the WhatsApp Cloud API, automated tests, a public demo deployment, and having the Kiswahili and Luganda answers reviewed by native speakers and a clinician.
+
+## Getting started
 
 ```bash
 cd mwanacare
 python -m venv venv
-
-# Windows (Git Bash)
-source venv/Scripts/activate
-# Windows (PowerShell)
-# venv\Scripts\Activate.ps1
-# macOS/Linux
-# source venv/bin/activate
-
+source venv/Scripts/activate      # Windows Git Bash. macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
-
 python manage.py migrate
-python manage.py createsuperuser   # for /admin/ access — prompts for username/email/password
+python manage.py createsuperuser
 python manage.py runserver
 ```
 
 Then open `http://127.0.0.1:8000/`.
 
-## How data gets in: the admin comes first
+### Add data through the admin first
 
-Because caregivers only ever link to existing records, **every new caregiver needs a record created in `/admin/` before they can sign up**:
+Caregivers can only link to records that already exist, so a facility (you, during setup) adds them first:
 
-1. Log in to `http://127.0.0.1:8000/admin/` with the superuser account.
-2. Under **Core → Parent profiles**, click **Add parent profile**.
-3. Fill in `phone_number` (this is the key the caregiver will sign up with) and `location`. Leave `user` blank — it fills in automatically when the caregiver signs up.
-4. Add their child(ren) right there in the inline **Children** section (name, date of birth, gender, blood type, allergies).
-5. Open a saved **Child** to add **Immunization records** and **Growth measurements** inline — these populate that child's Health Record page and drive auto-generated reminders.
-6. Under **Core → Facilities**, add partner hospitals/clinics: name, type, address, `location`, phone/email, `services` (comma-separated tags like `Paediatrics, Immunisation, Emergency`), an optional `rating`, and `latitude`/`longitude` if you want them to show as a pin on the facility map.
+1. Log in at `http://127.0.0.1:8000/admin/` with your superuser account.
+2. Under **Core → Parent profiles**, add a profile with a `phone_number` and `location`. Leave `user` blank; it fills in when the caregiver signs up.
+3. Add the children in the inline **Children** section.
+4. Open a child to add **Immunization records** and **Growth measurements**. These drive the health record page and the reminders.
+5. Under **Core → Facilities**, add partner facilities. Add `latitude` and `longitude` to show them on the map.
 
-## Signing up as a caregiver
+### Sign up as a caregiver
 
-`/signup/` asks for a name, email, password, and the **exact phone number** the facility used in step 3 above:
+Go to `/signup/` and use the **exact phone number** entered in step 2:
 
-- No matching phone number → signup is rejected with a message to contact the facility.
-- Matching but already linked to another account → told to log in instead.
-- Matching and unclaimed → a login is created and immediately linked to that `ParentProfile` (and all its children).
+- No matching number: signup is refused with a message to contact the facility.
+- Number already linked to an account: the caregiver is asked to log in instead.
+- Matching and unclaimed: the account is created and linked to that profile and its children.
 
-Logging in afterwards (`/accounts/login/`) is a normal username/password Django login — the phone number only matters once, at signup.
+## Technical notes
 
-## Features
+- **Reminder banner:** a context processor (`core/context_processors.py`) adds active reminders to every page.
+- **MwanaAI:** `core/services.py::post_immunization_answer`. The Kiswahili and Luganda answers are prototype translations and should be reviewed before real use.
+- **WhatsApp:** `core/services.py::dispatch_whatsapp_message` prints messages to the server console by default. Set `WHATSAPP_PROVIDER` in `settings.py` and extend that function to connect a real provider.
+- **Before deploying:** replace the development `SECRET_KEY` and set `DEBUG = False`. Signup passwords need at least 6 characters.
 
-| Page | What it shows |
-|---|---|
-| Dashboard | Children, upcoming vaccinations, active reminders, recent completed referral visits |
-| Children | Read-only list of the caregiver's children (facility-provided) |
-| Health Records (`/records/`, then per child) | Blood type, allergies, latest growth measurement with percentiles, and a full vaccination timeline with status pills (Completed / Due soon / Overdue / Upcoming) |
-| Reminders | Auto-generated from any vaccination due within 30 days or overdue; a "Notify via WhatsApp" button dispatches the message (console-logged in dev — see below). A persistent nag banner (see below) also follows the caregiver around the site until each reminder is resolved |
-| Facilities | Search + tag filters (Vaccination/Paediatrics/Emergency) over partner facilities, with a live map (Leaflet/OpenStreetMap) and, if the browser grants location access via native GPS, distance sorting |
-| Referrals | Caregiver-initiated: request a referral for a child to a facility, and mark it completed with visit notes afterward |
-| MwanaAI (`/mwanaai/`) | Keyword-based guidance for common post-vaccination and child health questions, in English/Kiswahili/Luganda, typed or spoken via the browser's built-in voice input |
-| Mwana Notes (`/notes/`) | The one place a caregiver enters their own data: health notes, bills paid, or outstanding debts, typed or spoken in any of the three languages, with a one-click "Send to WhatsApp" to keep a copy on their phone |
+## Team
 
-## Persistent reminder nudges
-
-Any unresolved reminder (due within 30 days, or overdue) shows as a banner at the top
-of every page — not just the Reminders page — via a `active_reminders` context
-processor (`core/context_processors.py`). It turns red and pulses once a vaccination
-is actually overdue. The banner keeps reappearing on each page load until the
-caregiver resolves the underlying reminder (via the "Notify via WhatsApp" button on
-`/reminders/`), the same way a Duolingo streak nag won't go away on its own.
-
-## MwanaAI and voice input
-
-MwanaAI (`core/services.py::post_immunization_answer`) is deliberately simple keyword
-matching rather than a real language model — predictable answers matter more than
-cleverness in a clinical context. The mic button on both MwanaAI and Mwana Notes uses
-the browser's native `SpeechRecognition`/`webkitSpeechRecognition` API (no external
-API key, Chrome/Edge only) to transcribe speech into the text field; the language
-picker drives both the recognition locale and which translated answer comes back. The
-Kiswahili/Luganda strings are best-effort prototype translations and should be
-reviewed by a clinician or native speaker before this is used with real caregivers.
-
-## WhatsApp integration
-
-`core/services.py` has a `dispatch_whatsapp_message` stub. By default (`WHATSAPP_PROVIDER` unset, or `"console"`) it just prints the message to the server console instead of sending it — useful for development. To wire up a real provider (e.g. Twilio, Meta WhatsApp Cloud API), set `WHATSAPP_PROVIDER` in `mwanacare/settings.py` and extend that function. Reminders, referrals, and Mwana Notes ("Send to WhatsApp") all go through this same stub.
-
-## Notes for development
-
-- `DEBUG = True` and a hardcoded `SECRET_KEY` in `settings.py` are fine for local dev only — replace both before deploying anywhere real.
-- The facility map only plots facilities that have `latitude`/`longitude` set in admin; others still appear as cards, just without a pin or distance badge.
-- Password rules on the signup page are intentionally relaxed (minimum 6 characters) compared to the rest of the site (e.g. admin password changes still use Django's full validator set).
+- **Aliyer Bakers Musaazi** — founder and lead developer
+- **Taliwako Margaret** — helped shape the idea and pitch, and built the first static HTML screens from our mockups
+- <!-- TODO: third teammate's name, if they agree to be listed --> — helped shape the idea and pitch
