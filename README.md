@@ -120,5 +120,5 @@ python manage.py test core
 ## Team
 
 - **Aliyer Bakers Musaazi** — founder and lead developer
-- **Taliwako Margaret** — helped shape the idea and pitch, and built the first static HTML screens from our mockups
-- <!-- TODO: third teammate's name, if they agree to be listed --> — helped shape the idea and pitchc
+- **Taliwako Margaret** — helped shape the idea and pitch,mockups
+- **Mangeni Hearty** — helped shape the idea and pitch
