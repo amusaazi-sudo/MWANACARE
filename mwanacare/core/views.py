@@ -14,6 +14,7 @@ from .forms import (
     SignUpForm,
 )
 from .models import Child, Facility, ImmunizationRecord, LANGUAGE_CHOICES, Note, ParentProfile, Referral, Reminder
+from .overview import child_overview
 from .services import (
     dispatch_whatsapp_message,
     forward_note_to_whatsapp,
@@ -55,28 +56,29 @@ def signup(request):
 
 @login_required
 def dashboard(request):
+    """Home: what the chosen child needs next, then what's coming up."""
     profile = get_parent_profile(request.user)
-    today = timezone.localdate()
-    children = Child.objects.filter(parent=profile)
-    upcoming_records = ImmunizationRecord.objects.filter(
-        child__parent=profile,
-        next_due_date__gte=today,
-    ).order_by("next_due_date")[:6]
-    reminders = sync_due_reminders(profile).filter(sent=False)[:6]
-    recent_visits = Referral.objects.filter(
-        child__parent=profile,
-        status="Completed",
-    ).order_by("-completed_at", "-referral_date")[:6]
+    children = list(Child.objects.filter(parent=profile).order_by("date_of_birth"))
+    chosen = request.GET.get("child")
+    child = next((c for c in children if str(c.pk) == chosen), children[0] if children else None)
+
+    planned_visit = None
+    if child:
+        planned_visit = (
+            Referral.objects.filter(child=child, status="Pending")
+            .select_related("facility")
+            .order_by("-referral_date")
+            .first()
+        )
 
     return render(
         request,
         "dashboard.html",
         {
             "children": children,
-            "upcoming_records": upcoming_records,
-            "reminders": reminders,
-            "recent_visits": recent_visits,
-            "pending_referrals": Referral.objects.filter(child__parent=profile, status="Pending").count(),
+            "child": child,
+            "overview": child_overview(child) if child else None,
+            "planned_visit": planned_visit,
         },
     )
 
@@ -186,7 +188,8 @@ def referrals(request):
             messages.success(request, f"{message} {result.detail}")
             return redirect("referrals")
     else:
-        form = ReferralForm(parent_profile=profile_obj)
+        # "Plan a visit" on Home links here with ?child=<id> to preselect the child.
+        form = ReferralForm(parent_profile=profile_obj, initial={"child": request.GET.get("child")})
 
     referral_list = Referral.objects.filter(child__parent=profile_obj).order_by("-referral_date")
     return render(request, "referral.html", {"form": form, "referrals": referral_list})

@@ -1,79 +1,91 @@
 {% extends "base.html" %}
-{% block title %}Dashboard | MwanaCare{% endblock %}
+{% block title %}Home | MwanaCare{% endblock %}
 {% block content %}
-<div class="dashboard-hero d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <div>
-        <h1 class="h3 fw-bold mb-1">
-            <i class="fas fa-notes-medical me-2"></i>
-            MwanaCare Dashboard
-        </h1>
-        <p class="text-secondary mb-0">Children, upcoming vaccinations, reminders and recent visits.</p>
-    </div>
-</div>
+<h1 class="h3 fw-bold mb-1">Hello{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
+<p class="text-secondary mb-3">Here's what your child needs next.</p>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="panel stat"><div class="text-secondary">Children</div><div class="fs-3 fw-bold">{{ children|length }}</div></div></div>
-    <div class="col-md-4"><div class="panel stat"><div class="text-secondary">Upcoming vaccines</div><div class="fs-3 fw-bold">{{ upcoming_records|length }}</div></div></div>
-    <div class="col-md-4"><div class="panel stat"><div class="text-secondary">Planned visits</div><div class="fs-3 fw-bold">{{ pending_referrals }}</div></div></div>
-</div>
-
-<div class="row g-4">
-    <div class="col-lg-6">
-        <div class="panel h-100">
-            <h2 class="h5">Children</h2>
-            {% for child in children %}
-                <div class="d-flex justify-content-between border-top py-2">
-                    <span>{{ child.name }} <span class="text-secondary small">&middot; {{ child.age_display }}</span></span>
-                    <a href="{% url 'child_health_record' child.pk %}">View record</a>
-                </div>
-            {% empty %}
-                <div class="empty-state">No children registered yet.</div>
+{% if not child %}
+    <div class="empty-state">No children on file yet. Your health facility adds them when they register you.</div>
+{% else %}
+    {% if children|length > 1 %}
+        <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Choose a child">
+            {% for c in children %}
+                <a href="?child={{ c.pk }}" class="chip {% if c.pk == child.pk %}active{% endif %}"
+                   {% if c.pk == child.pk %}aria-current="true"{% endif %}>{{ c.name }} &middot; {{ c.age_display }}</a>
             {% endfor %}
         </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="panel h-100">
-            <h2 class="h5">Upcoming Vaccinations</h2>
-            {% for record in upcoming_records %}
-                <div class="border-top py-2">
-                    <div class="fw-semibold">{{ record.child.name }} - {{ record.vaccine_name }}</div>
-                    <div class="text-secondary small">Due {{ record.next_due_date }}</div>
-                </div>
-            {% empty %}
-                <div class="empty-state">No upcoming vaccinations recorded.</div>
-            {% endfor %}
-        </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="panel h-100">
-            <h2 class="h5">Reminders</h2>
-            {% for reminder in reminders %}
-                <div class="d-flex justify-content-between align-items-center gap-2 border-top py-2">
-                    <div>
-                        <div>{{ reminder.message }}</div>
-                        <div class="text-secondary small">{{ reminder.child.name }} - {{ reminder.due_date }}</div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            {% if overview.next_due %}
+                <section class="next-card {% if overview.is_overdue %}overdue{% endif %}" aria-label="Next vaccination">
+                    <span class="next-label">Next for {{ child.name }}</span>
+                    <div class="next-when">
+                        {% if overview.is_overdue %}{{ overview.days_late }} day{{ overview.days_late|pluralize }} late
+                        {% elif overview.days_until == 0 %}Today
+                        {% elif overview.days_until == 1 %}Tomorrow
+                        {% else %}In {{ overview.days_until }} days{% endif %}
                     </div>
-                    <span class="pill {% if reminder.urgency == 'overdue' %}pill-overdue{% else %}pill-due-soon{% endif %}">
-                        {% if reminder.urgency == 'overdue' %}OVERDUE{% else %}DUE SOON{% endif %}
-                    </span>
+                    <p class="text-secondary mb-3">
+                        {% if overview.is_overdue %}
+                            Was due {{ overview.next_due|date:"l j F" }}. It's not too late, so go as soon as you can.
+                        {% else %}
+                            {{ overview.next_due|date:"l j F" }}
+                        {% endif %}
+                    </p>
+                    <ul class="vax-list">
+                        {% for record in overview.next_records %}
+                            <li>{{ record.vaccine_name }}{% if record.dose_label %} &middot; {{ record.dose_label }}{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                    {% if planned_visit %}
+                        <div class="planned-note">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Visit planned at <strong>{{ planned_visit.facility.name }}</strong>.
+                            <a href="{% url 'referral_update' planned_visit.pk %}">Record it</a> after you've been.
+                        </div>
+                    {% else %}
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-primary flex-fill" href="{% url 'referrals' %}?child={{ child.pk }}">Plan a visit</a>
+                            <a class="btn btn-light flex-fill" href="{% url 'facility_finder' %}?tag=Vaccination">Find a clinic</a>
+                        </div>
+                    {% endif %}
+                </section>
+            {% else %}
+                <section class="next-card" aria-label="Next vaccination">
+                    <span class="next-label">Next for {{ child.name }}</span>
+                    <div class="next-when">All caught up</div>
+                    <p class="text-secondary mb-0">No vaccinations are scheduled for {{ child.name }} right now. Your health facility will add the next ones at your visit.</p>
+                </section>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-5 d-flex flex-column gap-4">
+            <section class="panel">
+                <h2 class="h6 text-secondary mb-2">Vaccination record</h2>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-4 fw-bold text-nowrap">{{ overview.given }} of {{ overview.total }}</div>
+                    <div class="progress-track flex-grow-1" role="img" aria-label="{{ overview.given }} of {{ overview.total }} vaccinations given">
+                        <span style="width: {{ overview.percent }}%"></span>
+                    </div>
                 </div>
-            {% empty %}
-                <div class="empty-state">No active reminders.</div>
-            {% endfor %}
+                <div class="small text-secondary mt-1">vaccinations given</div>
+                <a class="d-inline-block mt-2" href="{% url 'child_health_record' child.pk %}">See {{ child.name }}'s full record</a>
+            </section>
+
+            {% if overview.coming_up %}
+                <section class="panel">
+                    <h2 class="h6 text-secondary mb-2">Coming up</h2>
+                    {% for record in overview.coming_up %}
+                        <div class="d-flex justify-content-between gap-3 py-2 {% if not forloop.first %}border-top{% endif %}">
+                            <span>{{ record.vaccine_name }}{% if record.dose_label %} &middot; {{ record.dose_label }}{% endif %}</span>
+                            <span class="text-secondary text-nowrap">{{ record.next_due_date|date:"j M" }}</span>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endif %}
         </div>
     </div>
-    <div class="col-lg-6">
-        <div class="panel h-100">
-            <h2 class="h5">Recent Visits</h2>
-            {% for visit in recent_visits %}
-                <div class="border-top py-2">
-                    <div class="fw-semibold">{{ visit.child.name }} at {{ visit.facility.name }}</div>
-                    <div class="text-secondary small">{{ visit.completed_at|default:visit.referral_date }}</div>
-                </div>
-            {% empty %}
-                <div class="empty-state">No completed visits yet.</div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
+{% endif %}
 {% endblock %}

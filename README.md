@@ -24,7 +24,7 @@ MwanaCare follows the whole journey in one place: **remember → find → visit 
 
 | Page | What it does |
 |---|---|
-| **Dashboard** | Children, upcoming vaccinations, active reminders and recent completed referral visits |
+| **Home** | Opens on what each child needs next: which vaccines, how many days to go (or how late), and buttons to plan a visit or find a clinic. Also shows how much of the record is complete |
 | **Records** | Blood type, allergies, latest growth measurement with percentiles, and a vaccination timeline with status labels (Completed / Due soon / Overdue / Upcoming) |
 | **Reminders** | Generated automatically from the vaccination schedule. A banner follows the caregiver across the site, turning red once a vaccination is overdue, until the reminder is resolved |
 | **Clinics** | Search and filter partner clinics, see them on a live map, and sort by distance using the phone's location |

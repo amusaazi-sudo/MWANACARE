@@ -1,12 +1,12 @@
-"""Tests for signup, login, records and navigation. Run with:  python manage.py test core"""
+"""Tests for signup, login, home, records and navigation. Run with:  python manage.py test core"""
 
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Child, Facility, GrowthMeasurement, ParentProfile, Referral
+from .models import Child, Facility, GrowthMeasurement, ImmunizationRecord, ParentProfile, Referral
 
 PASSWORD = "safe-pass-123"
 
@@ -106,3 +106,52 @@ class NavigationTests(TestCase):
         self.assertContains(response, "Planned")
         self.assertContains(response, "Record visit")
         self.assertNotContains(response, "Referral Flow")
+
+
+class HomeTests(TestCase):
+    def setUp(self):
+        self.profile = ParentProfile.objects.create(phone_number="0772123456")
+        self.client.post(reverse("signup"), signup_data())
+        self.child = self.add_child("Amani")
+
+    def add_child(self, name):
+        return Child.objects.create(parent=self.profile, name=name, date_of_birth=date(2025, 6, 1), gender="F")
+
+    def add_record(self, child, vaccine, due_in_days=None, given=False):
+        today = date.today()
+        return ImmunizationRecord.objects.create(
+            child=child,
+            vaccine_name=vaccine,
+            date_given=today - timedelta(days=60) if given else None,
+            next_due_date=today + timedelta(days=due_in_days) if due_in_days is not None else None,
+        )
+
+    def test_shows_the_next_vaccines_and_a_countdown(self):
+        self.add_record(self.child, "BCG", given=True)
+        self.add_record(self.child, "Polio 3", due_in_days=6)
+        self.add_record(self.child, "PCV 3", due_in_days=6)
+        self.add_record(self.child, "Measles-Rubella 1", due_in_days=40)
+
+        response = self.client.get(reverse("dashboard"))
+        self.assertContains(response, "In 6 days")
+        self.assertContains(response, "Polio 3")
+        self.assertContains(response, "PCV 3")
+        self.assertContains(response, "1 of 4")
+        self.assertContains(response, "Coming up")
+
+    def test_overdue_vaccine_says_how_late_it_is(self):
+        self.add_record(self.child, "Polio 3", due_in_days=-3)
+        self.assertContains(self.client.get(reverse("dashboard")), "3 days late")
+
+    def test_all_caught_up_when_nothing_is_scheduled(self):
+        self.add_record(self.child, "BCG", given=True)
+        self.assertContains(self.client.get(reverse("dashboard")), "All caught up")
+
+    def test_switching_between_children(self):
+        nia = self.add_child("Nia")
+        response = self.client.get(reverse("dashboard"), {"child": nia.pk})
+        self.assertContains(response, "Next for Nia")
+
+    def test_plan_a_visit_preselects_the_child(self):
+        response = self.client.get(reverse("referrals"), {"child": self.child.pk})
+        self.assertContains(response, f'value="{self.child.pk}" selected')
