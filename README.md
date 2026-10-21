@@ -113,4 +113,4 @@ Go to `/signup/` and use the **exact phone number** entered in step 2:
 
 - **Aliyer Bakers Musaazi** — founder and lead developer
 - **Taliwako Margaret** — helped shape the idea and pitch, and built the first static HTML screens from our mockups
-- <!-- TODO: third teammate's name, if they agree to be listed --> — helped shape the idea and pitch
+- <!-- TODO: third teammate's name, if they agree to be listed --> — helped shape the idea and pitchc
