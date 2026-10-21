@@ -12,6 +12,9 @@
             --mc-blue: #64b5f6;
             --mc-blue-deep: #1976d2;
             --mc-gold: #ead377;
+            --mc-burgundy: #8c1d2f;      /* main accent: buttons, active menu, chips */
+            --mc-burgundy-dark: #6b1524;
+            --mc-burgundy-soft: #f7e4e7;
             --mc-green: #1b7f5c;
             --mc-ink: #17202a;
             --mc-soft: #eef7ff;
@@ -28,7 +31,7 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
         }
         .navbar-brand { color: var(--mc-blue-deep); font-weight: 800; }
-        .nav-link.active, .nav-link:hover { color: var(--mc-blue-deep) !important; }
+        .nav-link.active, .nav-link:hover { color: var(--mc-burgundy) !important; }
         .page-shell { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
         .panel {
             background: #ffffff;
@@ -38,20 +41,25 @@
             box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
         }
         .stat {
-            border-left: 6px solid var(--mc-gold);
+            border-left: 6px solid var(--mc-burgundy);
             background: rgba(255, 255, 255, 0.96);
         }
         .btn-primary {
-            background: var(--mc-gold);
-            border-color: var(--mc-gold);
-            color: #111;
+            background: var(--mc-burgundy);
+            border-color: var(--mc-burgundy);
+            color: #fff;
             font-weight: 700;
         }
-        .btn-primary:hover {
-            background: var(--mc-blue);
-            border-color: var(--mc-blue);
-            color: #111;
+        .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+            background: var(--mc-burgundy-dark) !important;
+            border-color: var(--mc-burgundy-dark) !important;
+            color: #fff !important;
         }
+        .btn-outline-primary { color: var(--mc-burgundy); border-color: var(--mc-burgundy); }
+        .btn-outline-primary:hover { background: var(--mc-burgundy); border-color: var(--mc-burgundy); color: #fff; }
+        a { color: var(--mc-burgundy); }
+        a:hover { color: var(--mc-burgundy-dark); }
+        .form-control:focus, .form-select:focus { border-color: var(--mc-burgundy); box-shadow: 0 0 0 .2rem rgba(140, 29, 47, .2); }
         .btn, .form-control, .form-select { border-radius: 25px; }
         textarea.form-control { border-radius: 18px; }
         .form-control, .form-select {
@@ -153,8 +161,8 @@
             background: #eef7ff; color: var(--mc-ink); border: 1px solid transparent;
             text-decoration: none;
         }
-        .chip:hover { color: var(--mc-ink); background: #dff0ff; }
-        .chip.active { background: var(--mc-green); color: #fff; }
+        .chip:hover { color: var(--mc-burgundy); background: var(--mc-burgundy-soft); }
+        .chip.active { background: var(--mc-burgundy); color: #fff; }
         .rating-star { color: #f5a623; font-weight: 700; }
         .facility-map { height: 320px; border-radius: 20px; overflow: hidden; box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2); }
 
@@ -191,44 +199,103 @@
         /* Voice input (MwanaAI + Mwana Notes) */
         .mic-btn.recording { background: #a4302f; border-color: #a4302f; color: #fff; }
         .mic-hint { font-size: 12px; color: #68756f; }
+        /* Phone tab bar */
+        .tabbar {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030;
+            display: flex; background: #ffffff;
+            border-top: 1px solid #d9e2ea;
+            box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.12);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .tabbar > a, .tabbar > .dropup { flex: 1; }
+        .tabbar > a, .tabbar .dropup > button {
+            width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2px;
+            padding: 8px 0; font-size: 12px; color: #5b6670; text-decoration: none;
+            background: none; border: 0;
+        }
+        .tabbar > a > i, .tabbar .dropup > button > i { font-size: 18px; }
+        .tabbar > a.active, .tabbar .dropup > button.active { color: var(--mc-burgundy); font-weight: 700; }
+        @media (max-width: 991.98px) {
+            main.page-shell { padding-bottom: 96px; }
+        }
+        .navbar-nav .nav-link.active { font-weight: 700; border-bottom: 3px solid var(--mc-burgundy); }
     </style>
 </head>
 <body>
 {% block nav %}
-<nav class="navbar navbar-expand-lg sticky-top">
+{# Top bar: full menu on laptops, just the logo on phones (phones use the bottom tab bar). #}
+<nav class="navbar sticky-top">
     <div class="container-fluid page-shell py-0">
-        <a class="navbar-brand" href="{% url 'dashboard' %}">MwanaCare</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                {% if user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'children' %}">Children</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'records' %}">Records</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'reminders' %}">Reminders</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'facility_finder' %}">Facilities</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'referrals' %}">Referrals</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'notes' %}">Mwana Notes</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'mwanaai' %}">MwanaAI</a></li>
-                {% endif %}
+        <a class="navbar-brand" href="{% url 'dashboard' %}"><i class="fas fa-heartbeat me-1"></i>MwanaCare</a>
+        {% if user.is_authenticated %}
+            <ul class="navbar-nav flex-row gap-3 d-none d-lg-flex me-auto ms-3">
+                {% include "_nav_link.html" with section="home" url_name="dashboard" label="Home" %}
+                {% include "_nav_link.html" with section="records" url_name="records" label="Records" %}
+                {% include "_nav_link.html" with section="reminders" url_name="reminders" label="Reminders" %}
+                {% include "_nav_link.html" with section="clinics" url_name="facility_finder" label="Clinics" %}
+                {% include "_nav_link.html" with section="visits" url_name="referrals" label="Visits" %}
+                {% include "_nav_link.html" with section="notes" url_name="notes" label="Notes" %}
+                {% include "_nav_link.html" with section="ask" url_name="mwanaai" label="Ask MwanaAI" %}
             </ul>
-            <div class="d-flex gap-2">
-                {% if user.is_authenticated %}
-                    <a class="btn btn-outline-secondary btn-sm" href="{% url 'profile' %}">Profile</a>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button class="btn btn-outline-danger btn-sm" type="submit">Logout</button>
-                    </form>
-                {% else %}
-                    <a class="btn btn-outline-secondary btn-sm" href="{% url 'login' %}">Login</a>
-                    <a class="btn btn-primary btn-sm" href="{% url 'signup' %}">Sign up</a>
-                {% endif %}
+            <div class="dropdown d-none d-lg-block">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user me-1"></i>{{ user.first_name|default:user.username }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button class="dropdown-item text-danger" type="submit">Log out</button>
+                        </form>
+                    </li>
+                </ul>
             </div>
-        </div>
+        {% else %}
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'login' %}">Log in</a>
+                <a class="btn btn-primary btn-sm" href="{% url 'signup' %}">Create account</a>
+            </div>
+        {% endif %}
     </div>
 </nav>
+
+{% if user.is_authenticated %}
+{# Bottom tab bar on phones: the four most-used pages, everything else under "More". #}
+<nav class="tabbar d-lg-none" aria-label="Main">
+    <a href="{% url 'dashboard' %}" class="{% if nav_section == 'home' %}active{% endif %}" {% if nav_section == 'home' %}aria-current="page"{% endif %}>
+        <i class="fas fa-home"></i>Home
+    </a>
+    <a href="{% url 'records' %}" class="{% if nav_section == 'records' %}active{% endif %}" {% if nav_section == 'records' %}aria-current="page"{% endif %}>
+        <i class="fas fa-file-medical"></i>Records
+    </a>
+    <a href="{% url 'facility_finder' %}" class="{% if nav_section == 'clinics' %}active{% endif %}" {% if nav_section == 'clinics' %}aria-current="page"{% endif %}>
+        <i class="fas fa-map-marker-alt"></i>Clinics
+    </a>
+    <a href="{% url 'mwanaai' %}" class="{% if nav_section == 'ask' %}active{% endif %}" {% if nav_section == 'ask' %}aria-current="page"{% endif %}>
+        <i class="fas fa-comment-medical"></i>Ask
+    </a>
+    <div class="dropup">
+        <button type="button" class="{% if nav_in_more %}active{% endif %}" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bars"></i>More
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'reminders' %}"><i class="fas fa-bell me-2"></i>Reminders</a></li>
+            <li><a class="dropdown-item" href="{% url 'referrals' %}"><i class="fas fa-calendar-check me-2"></i>Visits</a></li>
+            <li><a class="dropdown-item" href="{% url 'notes' %}"><i class="fas fa-sticky-note me-2"></i>Notes</a></li>
+            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button class="dropdown-item text-danger" type="submit"><i class="fas fa-sign-out-alt me-2"></i>Log out</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
+{% endif %}
 {% endblock %}
 
 <main class="page-shell">

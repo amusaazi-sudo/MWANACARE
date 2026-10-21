@@ -6,7 +6,7 @@ MwanaCare is a Django web app that helps parents and caregivers stay on top of t
 
 First built for the **Absa Girl Code Hackathon**, and still being improved.
 
-**My role:** founder and lead developer. I came up with MwanaCare and designed and built the Django application: the data models, phone-number account linking, the admin workflow for clinics, reminders, the facility finder, MwanaAI and Mwana Notes.
+**My role:** founder and lead developer. I came up with MwanaCare and designed and built the Django application: the data models, phone-number account linking, the admin workflow for clinics, reminders, the clinic finder, MwanaAI and Mwana Notes. I also redesigned the navigation for phones, with a bottom tab bar.
 
 ## The problem
 
@@ -16,19 +16,19 @@ MwanaCare follows the whole journey in one place: **remember → find → visit 
 
 ## Screenshots
 
-| Dashboard | Health record | Facility finder |
+| Home | Health record | Clinics |
 |---|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Health record](docs/screenshots/health-record.png) | ![Facility finder](docs/screenshots/facility-finder.png) |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Health record](docs/screenshots/health-record.png) | ![Clinics](docs/screenshots/facility-finder.png) |
 
 ## Features
 
 | Page | What it does |
 |---|---|
 | **Dashboard** | Children, upcoming vaccinations, active reminders and recent completed referral visits |
-| **Health Records** | Blood type, allergies, latest growth measurement with percentiles, and a vaccination timeline with status labels (Completed / Due soon / Overdue / Upcoming) |
+| **Records** | Blood type, allergies, latest growth measurement with percentiles, and a vaccination timeline with status labels (Completed / Due soon / Overdue / Upcoming) |
 | **Reminders** | Generated automatically from the vaccination schedule. A banner follows the caregiver across the site, turning red once a vaccination is overdue, until the reminder is resolved |
-| **Facility finder** | Search and filter partner facilities, see them on a live map, and sort by distance using the phone's location |
-| **Referrals** | Request a referral for a child to a facility, then record visit notes afterwards |
+| **Clinics** | Search and filter partner clinics, see them on a live map, and sort by distance using the phone's location |
+| **Visits** | Plan a clinic visit for a child, then record how it went |
 | **MwanaAI** | Answers common after-vaccination and child-health questions in English, Kiswahili or Luganda, typed or spoken |
 | **Mwana Notes** | Caregivers record health notes, bills paid or debts, by typing or voice, and send a copy to WhatsApp |
 

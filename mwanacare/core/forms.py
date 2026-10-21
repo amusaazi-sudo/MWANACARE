@@ -128,6 +128,8 @@ class ReferralForm(forms.ModelForm):
             self.fields["child"].queryset = Child.objects.filter(parent=parent_profile)
         self.fields["child"].widget.attrs["class"] = "form-select"
         self.fields["facility"].widget.attrs["class"] = "form-select"
+        self.fields["child"].label = "Child"
+        self.fields["facility"].label = "Clinic"
 
 
 class NoteForm(forms.ModelForm):
@@ -142,10 +144,18 @@ class NoteForm(forms.ModelForm):
 
 
 class ReferralCompletionForm(forms.ModelForm):
+    # Caregiver-friendly words for the stored statuses (no database change needed).
+    STATUS_LABELS = [("Pending", "Planned"), ("Completed", "Visited"), ("Cancelled", "Cancelled")]
+
     class Meta:
         model = Referral
         fields = ["status", "visit_notes"]
         widgets = {
             "status": forms.Select(attrs={"class": "form-select"}),
-            "visit_notes": forms.Textarea(attrs=_widget_attrs(rows=4)),
+            "visit_notes": forms.Textarea(attrs=_widget_attrs(rows=4, placeholder="e.g. Got the measles vaccine. Next visit in 3 months.")),
         }
+        labels = {"status": "Did the visit happen?", "visit_notes": "Notes from the visit (optional)"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["status"].choices = self.STATUS_LABELS

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Hospital Search | MwanaCare{% endblock %}
+{% block title %}Clinics | MwanaCare{% endblock %}
 {% block content %}
 <div class="mb-4">
-    <h1 class="h3 mb-1">Hospital Search</h1>
-    <p class="text-secondary mb-0">Find verified partner care nearby &mdash; no need to add a facility yourself.</p>
+    <h1 class="h3 mb-1">Clinics</h1>
+    <p class="text-secondary mb-0">Find a partner clinic near you.</p>
 </div>
 
 <div class="position-relative mb-3">
@@ -77,11 +77,11 @@
     });
 
     var map = L.map(mapEl).setView(DEFAULT_CENTER, 12);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; OpenStreetMap contributors",
         maxZoom: 19,
+        referrerPolicy: "strict-origin-when-cross-origin",
     }).addTo(map);
-
     if (facilities.length) {
         var markers = facilities.map(function (f) {
             return L.marker([f.lat, f.lng]).addTo(map).bindPopup("<strong>" + f.name + "</strong><br>" + f.address);

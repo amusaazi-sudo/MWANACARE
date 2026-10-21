@@ -2,13 +2,10 @@
 {% load humanize %}
 {% block title %}{{ child.name }}'s Record | MwanaCare{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <a href="{% url 'records' %}" class="text-secondary text-decoration-none small">&larr; Back to children</a>
-        <h1 class="h3 mb-1 mt-1">Health Records</h1>
-        <p class="text-secondary mb-0">{{ child.name }}'s Comprehensive Record</p>
-    </div>
-    <div class="avatar-circle">{{ child.name|slice:":1"|upper }}</div>
+<div class="mb-4">
+    {# With one child, Records opens this page directly, so a back link would loop. #}
+    {% if child.parent.child_set.count > 1 %}<a href="{% url 'records' %}" class="text-secondary text-decoration-none small">&larr; Back to records</a>{% endif %}
+    <h1 class="h3 mb-0 mt-1">{{ child.name }}'s record</h1>
 </div>
 
 <div class="panel mb-4">

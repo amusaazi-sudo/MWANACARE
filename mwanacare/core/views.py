@@ -97,9 +97,8 @@ def profile(request):
 
 @login_required
 def child_list(request):
-    profile_obj = get_parent_profile(request.user)
-    children = Child.objects.filter(parent=profile_obj)
-    return render(request, "child-tracker.html", {"children": children})
+    """Old "Children" page, now part of Records. Kept so existing links still work."""
+    return redirect("records")
 
 
 @login_required
@@ -182,7 +181,7 @@ def referrals(request):
         form = ReferralForm(request.POST, parent_profile=profile_obj)
         if form.is_valid():
             referral = form.save()
-            message = f"Referral created for {referral.child.name} to {referral.facility.name}."
+            message = f"Visit planned for {referral.child.name} at {referral.facility.name}."
             result = dispatch_whatsapp_message(referral.child.parent.phone_number, message)
             messages.success(request, f"{message} {result.detail}")
             return redirect("referrals")
@@ -204,7 +203,7 @@ def referral_update(request, pk):
             if updated.status == "Completed" and not updated.completed_at:
                 updated.completed_at = timezone.now()
             updated.save()
-            messages.success(request, "Referral record updated.")
+            messages.success(request, "Visit updated.")
             return redirect("referrals")
     else:
         form = ReferralCompletionForm(instance=referral)

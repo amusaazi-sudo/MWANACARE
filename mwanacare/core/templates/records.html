@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Health Records | MwanaCare{% endblock %}
+{% block title %}Records | MwanaCare{% endblock %}
 {% block content %}
 <div class="mb-4">
-    <h1 class="h3 mb-1">Health Records</h1>
-    <p class="text-secondary mb-0">Choose a child to view their full vaccination and growth record.</p>
+    <h1 class="h3 mb-1">Records</h1>
+    <p class="text-secondary mb-0">Choose a child to see their vaccinations and growth. Your health facility keeps these up to date.</p>
 </div>
 <div class="row g-3">
     {% for child in children %}
@@ -11,15 +11,17 @@
             <a href="{% url 'child_health_record' child.pk %}" class="text-decoration-none text-reset">
                 <div class="panel h-100 d-flex align-items-center gap-3">
                     <div class="avatar-circle">{{ child.name|slice:":1"|upper }}</div>
-                    <div>
+                    <div class="flex-grow-1">
                         <h2 class="h5 mb-0">{{ child.name }}</h2>
-                        <div class="text-secondary small">{{ child.age_display }}</div>
+                        <div class="text-secondary small">{{ child.age_display }} &middot; {{ child.get_gender_display }} &middot; Born {{ child.date_of_birth|date:"j M Y" }}</div>
                     </div>
+                    <i class="fas fa-chevron-right text-secondary"></i>
                 </div>
             </a>
         </div>
     {% empty %}
-        <div class="col-12"><div class="empty-state">No child profiles on file yet. Ask your health facility to register your child.</div></div>
+        <div class="col-12"><div class="empty-state">No children on file yet. Ask your health facility to register your child.</div></div>
     {% endfor %}
 </div>
+<p class="small text-secondary mt-3 mb-0">Something wrong in a record? Ask your health facility to correct it.</p>
 {% endblock %}

@@ -1,4 +1,4 @@
-"""Tests for signing up and logging in. Run with:  python manage.py test core"""
+"""Tests for signup, login, records and navigation. Run with:  python manage.py test core"""
 
 from datetime import date
 
@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Child, GrowthMeasurement, ParentProfile
+from .models import Child, Facility, GrowthMeasurement, ParentProfile, Referral
 
 PASSWORD = "safe-pass-123"
 
@@ -84,3 +84,25 @@ class HealthRecordTests(TestCase):
         response = self.client.get(reverse("child_health_record", args=[child.pk]))
         self.assertContains(response, "2nd percentile")
         self.assertContains(response, "23rd percentile")
+
+
+class NavigationTests(TestCase):
+    def setUp(self):
+        self.profile = ParentProfile.objects.create(phone_number="0772123456")
+        self.client.post(reverse("signup"), signup_data())
+
+    def test_current_page_is_marked_in_the_menu(self):
+        response = self.client.get(reverse("facility_finder"))
+        self.assertContains(response, f'href="{reverse("facility_finder")}" class="active" aria-current="page"')
+
+    def test_old_children_page_redirects_to_records(self):
+        self.assertRedirects(self.client.get(reverse("children")), reverse("records"))
+
+    def test_visits_use_caregiver_friendly_words(self):
+        child = Child.objects.create(parent=self.profile, name="Amani", date_of_birth=date(2025, 1, 1), gender="F")
+        clinic = Facility.objects.create(name="Mulago", address="Kampala", location="Kampala")
+        Referral.objects.create(child=child, facility=clinic)
+        response = self.client.get(reverse("referrals"))
+        self.assertContains(response, "Planned")
+        self.assertContains(response, "Record visit")
+        self.assertNotContains(response, "Referral Flow")
