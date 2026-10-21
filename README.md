@@ -14,11 +14,7 @@ Immunization journeys are fragmented and stressful for families. Parents forget 
 
 MwanaCare follows the whole journey in one place: **remember → find → visit → record → understand → return**.
 
-## Screenshots
 
-| Home | Health record | Clinics |
-|---|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Health record](docs/screenshots/health-record.png) | ![Clinics](docs/screenshots/facility-finder.png) |
 
 ## Features
 
