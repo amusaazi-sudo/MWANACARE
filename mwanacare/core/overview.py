@@ -40,3 +40,31 @@ def child_overview(child, today=None):
         overview.coming_up = pending[len(overview.next_records):len(overview.next_records) + 3]
         overview.days_until = (overview.next_due - today).days
     return overview
+
+
+@dataclass
+class CardRow:
+    """One row on the vaccination card: vaccines given (or due) on the same date."""
+
+    state: str            # "done", "late", "due", "later" or "unscheduled"
+    when: date | None
+    records: list
+    facility: object = None
+
+
+STATE_FOR_STATUS = {"Completed": "done", "Overdue": "late", "Due soon": "due", "Upcoming": "later"}
+STATE_ORDER = ["done", "late", "due", "later", "unscheduled"]
+
+
+def vaccination_card(records):
+    """Group records into card rows, oldest first, like stamps in a paper health card."""
+    rows = {}
+    for record in records:
+        state = STATE_FOR_STATUS[record.status]
+        when = record.date_given or record.next_due_date
+        if when is None:
+            state = "unscheduled"
+        row = rows.setdefault((state, when), CardRow(state=state, when=when, records=[]))
+        row.records.append(record)
+        row.facility = row.facility or record.facility
+    return sorted(rows.values(), key=lambda r: (STATE_ORDER.index(r.state), r.when or date.max))

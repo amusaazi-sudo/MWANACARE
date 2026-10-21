@@ -54,18 +54,30 @@
     {% endif %}
 </div>
 
-<h2 class="h5 mb-3">Vaccination Timeline</h2>
-<div class="panel">
-    {% for record in immunizations %}
-        <div class="d-flex justify-content-between align-items-start py-3 {% if not forloop.first %}border-top{% endif %}">
-            <div>
-                <div class="fw-semibold">{{ record.vaccine_name }}{% if record.dose_label %} &middot; {{ record.dose_label }}{% endif %}</div>
-                <div class="text-secondary small">
-                    {% if record.date_given %}Date: {{ record.date_given }}{% else %}Due: {{ record.next_due_date|default:"Not scheduled" }}{% endif %}
-                    {% if record.facility %} &middot; Clinic: {{ record.facility.name }}{% endif %}
+<h2 class="h5 mb-1">Vaccination card</h2>
+<p class="text-secondary small mb-3">Each stamp is a visit where {{ child.name }} was vaccinated. Your health facility adds them.</p>
+<div class="panel vaccine-card">
+    {% for row in card_rows %}
+        <div class="card-row">
+            <div class="stamp stamp-{{ row.state }}" aria-hidden="true">
+                {% if row.state == "done" %}<span><b>&#10003;</b>{{ row.when|date:"j M" }}<br>{{ row.when|date:"Y" }}</span>
+                {% elif row.state == "late" %}<span>Over<br>due</span>
+                {% elif row.state == "due" %}<span>Due<br>soon</span>
+                {% elif row.state == "later" %}<span>{{ row.when|date:"M" }}<br>{{ row.when|date:"Y" }}</span>
+                {% else %}<span>Not<br>set</span>{% endif %}
+            </div>
+            <div class="min-w-0">
+                <div class="fw-semibold">
+                    {% for record in row.records %}{{ record.vaccine_name }}{% if record.dose_label %} ({{ record.dose_label }}){% endif %}{% if not forloop.last %} &middot; {% endif %}{% endfor %}
+                </div>
+                <div class="small card-row-status card-row-{{ row.state }}">
+                    {% if row.state == "done" %}Given {{ row.when|date:"j F Y" }}{% if row.facility %} at {{ row.facility.name }}{% endif %}
+                    {% elif row.state == "late" %}Overdue since {{ row.when|date:"j F Y" }}. It's not too late, so visit a clinic soon.
+                    {% elif row.state == "due" %}Due {{ row.when|date:"l j F" }}
+                    {% elif row.state == "later" %}From {{ row.when|date:"j F Y" }}
+                    {% else %}Date not set yet{% endif %}
                 </div>
             </div>
-            <span class="pill pill-{{ record.status|slugify }}">{{ record.status|upper }}</span>
         </div>
     {% empty %}
         <div class="empty-state">No vaccination records on file yet. Your health facility enters these after each visit.</div>

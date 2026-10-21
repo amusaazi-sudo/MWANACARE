@@ -14,7 +14,7 @@ from .forms import (
     SignUpForm,
 )
 from .models import Child, Facility, ImmunizationRecord, LANGUAGE_CHOICES, Note, ParentProfile, Referral, Reminder
-from .overview import child_overview
+from .overview import child_overview, vaccination_card
 from .services import (
     dispatch_whatsapp_message,
     forward_note_to_whatsapp,
@@ -118,13 +118,13 @@ def records(request):
 def child_health_record(request, pk):
     profile_obj = get_parent_profile(request.user)
     child = get_object_or_404(Child, pk=pk, parent=profile_obj)
-    immunizations = ImmunizationRecord.objects.filter(child=child).order_by("next_due_date", "date_given")
+    immunizations = ImmunizationRecord.objects.filter(child=child).select_related("facility")
     return render(
         request,
         "health-record.html",
         {
             "child": child,
-            "immunizations": immunizations,
+            "card_rows": vaccination_card(immunizations),
             "growth": child.latest_growth_measurement(),
         },
     )
@@ -188,8 +188,11 @@ def referrals(request):
             messages.success(request, f"{message} {result.detail}")
             return redirect("referrals")
     else:
-        # "Plan a visit" on Home links here with ?child=<id> to preselect the child.
-        form = ReferralForm(parent_profile=profile_obj, initial={"child": request.GET.get("child")})
+        # Home links here with ?child=<id>, and Clinics with ?facility=<id>, to preselect them.
+        form = ReferralForm(
+            parent_profile=profile_obj,
+            initial={"child": request.GET.get("child"), "facility": request.GET.get("facility")},
+        )
 
     referral_list = Referral.objects.filter(child__parent=profile_obj).order_by("-referral_date")
     return render(request, "referral.html", {"form": form, "referrals": referral_list})

@@ -237,6 +237,32 @@
         .planned-note { background: #d7f3e6; color: var(--mc-ink); border-radius: 16px; padding: 12px 16px; }
         .progress-track { height: 10px; border-radius: 999px; background: #e3ebf2; overflow: hidden; }
         .progress-track span { display: block; height: 100%; background: var(--mc-green); border-radius: 999px; }
+        /* Records: vaccination card with stamps */
+        .vaccine-card { padding: 8px 20px; }
+        .card-row { display: grid; grid-template-columns: 72px 1fr; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px dashed #c9d6e0; }
+        .card-row:first-child { border-top: 0; }
+        .min-w-0 { min-width: 0; }
+        .stamp {
+            width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; text-align: center;
+            font-size: 11px; line-height: 1.15; font-weight: 800; letter-spacing: .03em; text-transform: uppercase;
+        }
+        .stamp b { display: block; font-size: 17px; }
+        .stamp-done {
+            color: var(--mc-burgundy); border: 2.5px solid var(--mc-burgundy);
+            box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4.5px var(--mc-burgundy);
+            transform: rotate(-12deg); opacity: .92;
+        }
+        .stamp-late { color: #a4302f; background: #fbdcdc; border: 2.5px dashed #a4302f; }
+        .stamp-due { color: #8a6d1a; background: #fff2cc; border: 2.5px dashed #c9a227; }
+        .stamp-later, .stamp-unscheduled { color: #68756f; border: 2px dotted #b6ccd9; }
+        .card-row-status { color: #68756f; }
+        .card-row-done { color: var(--mc-green); }
+        .card-row-late { color: #a4302f; font-weight: 700; }
+        .card-row-due { color: #8a6d1a; font-weight: 700; }
+        @media (prefers-reduced-motion: no-preference) {
+            .stamp-done { transition: transform .2s; }
+            .card-row:hover .stamp-done { transform: rotate(-4deg); }
+        }
     </style>
 </head>
 <body>

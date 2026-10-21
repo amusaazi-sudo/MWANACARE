@@ -22,7 +22,7 @@
 </form>
 
 <div class="d-flex flex-wrap gap-2 mb-4">
-    <a href="?location={{ query_location }}" class="chip {% if not active_tag %}active{% endif %}">Nearby</a>
+    <a href="?location={{ query_location }}" class="chip {% if not active_tag %}active{% endif %}">All</a>
     {% for tag in filter_tags %}
         <a href="?location={{ query_location }}&tag={{ tag }}" class="chip {% if active_tag == tag %}active{% endif %}">{{ tag }}</a>
     {% endfor %}
@@ -49,7 +49,19 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                {% if facility.phone %}<div class="small text-secondary">{{ facility.phone }}</div>{% endif %}
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a class="btn btn-primary btn-sm" href="{% url 'referrals' %}?facility={{ facility.pk }}">
+                        <i class="fas fa-calendar-plus me-1"></i>Plan visit here
+                    </a>
+                    <a class="btn btn-outline-primary btn-sm" href="{{ facility.directions_url }}" target="_blank" rel="noopener">
+                        <i class="fas fa-route me-1"></i>Directions
+                    </a>
+                    {% if facility.phone %}
+                        <a class="btn btn-outline-primary btn-sm" href="tel:{{ facility.phone|cut:' ' }}">
+                            <i class="fas fa-phone me-1"></i>Call {{ facility.phone }}
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     {% empty %}

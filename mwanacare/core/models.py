@@ -1,4 +1,5 @@
 from datetime import date
+from urllib.parse import quote_plus
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -106,6 +107,15 @@ class Facility(models.Model):
     @property
     def service_list(self):
         return [s.strip() for s in self.services.split(",") if s.strip()]
+
+    @property
+    def directions_url(self):
+        """Google Maps directions: exact coordinates when known, otherwise a search by name and address."""
+        if self.latitude is not None and self.longitude is not None:
+            destination = f"{self.latitude},{self.longitude}"
+        else:
+            destination = ", ".join(part for part in (self.name, self.address, self.location) if part)
+        return "https://www.google.com/maps/dir/?api=1&destination=" + quote_plus(destination)
 
 class ImmunizationRecord(models.Model):
     child = models.ForeignKey(Child, on_delete=models.CASCADE)

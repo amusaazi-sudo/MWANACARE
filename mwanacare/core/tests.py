@@ -108,7 +108,9 @@ class NavigationTests(TestCase):
         self.assertNotContains(response, "Referral Flow")
 
 
-class HomeTests(TestCase):
+class CaregiverTestCase(TestCase):
+    """A signed-in caregiver with one child, plus helpers to add children and records."""
+
     def setUp(self):
         self.profile = ParentProfile.objects.create(phone_number="0772123456")
         self.client.post(reverse("signup"), signup_data())
@@ -126,6 +128,8 @@ class HomeTests(TestCase):
             next_due_date=today + timedelta(days=due_in_days) if due_in_days is not None else None,
         )
 
+
+class HomeTests(CaregiverTestCase):
     def test_shows_the_next_vaccines_and_a_countdown(self):
         self.add_record(self.child, "BCG", given=True)
         self.add_record(self.child, "Polio 3", due_in_days=6)
@@ -155,3 +159,47 @@ class HomeTests(TestCase):
     def test_plan_a_visit_preselects_the_child(self):
         response = self.client.get(reverse("referrals"), {"child": self.child.pk})
         self.assertContains(response, f'value="{self.child.pk}" selected')
+
+
+class VaccinationCardTests(CaregiverTestCase):
+    def test_given_vaccines_on_the_same_day_share_one_stamp(self):
+        bcg = self.add_record(self.child, "BCG", given=True)
+        self.add_record(self.child, "Polio 0", given=True)
+        self.add_record(self.child, "Polio 3", due_in_days=-5)
+
+        response = self.client.get(reverse("child_health_record", args=[self.child.pk]))
+        self.assertContains(response, 'class="stamp stamp-done"', count=1)
+        given = bcg.date_given
+        self.assertContains(response, f"Given {given.day} {given:%B %Y}")
+        self.assertContains(response, "Overdue since")
+
+    def test_card_rows_are_in_date_order(self):
+        self.add_record(self.child, "Measles-Rubella 1", due_in_days=90)
+        self.add_record(self.child, "BCG", given=True)
+        content = self.client.get(reverse("child_health_record", args=[self.child.pk])).content.decode()
+        self.assertLess(content.index("BCG"), content.index("Measles-Rubella 1"))
+
+
+class ClinicTests(TestCase):
+    def setUp(self):
+        ParentProfile.objects.create(phone_number="0772123456")
+        self.client.post(reverse("signup"), signup_data())
+
+    def test_clinic_card_has_call_directions_and_plan_buttons(self):
+        clinic = Facility.objects.create(
+            name="Lakeside Clinic", address="Plot 4", location="Kampala", phone="0414 123456",
+            latitude="0.313600", longitude="32.581100",
+        )
+        response = self.client.get(reverse("facility_finder"))
+        self.assertContains(response, 'href="tel:0414123456"')
+        self.assertContains(response, "destination=0.313600%2C32.581100")
+        self.assertContains(response, f"?facility={clinic.pk}")
+
+    def test_directions_fall_back_to_the_address(self):
+        clinic = Facility(name="Hope Clinic", address="Main Street", location="Gulu")
+        self.assertIn("destination=Hope+Clinic%2C+Main+Street%2C+Gulu", clinic.directions_url)
+
+    def test_plan_visit_here_preselects_the_clinic(self):
+        clinic = Facility.objects.create(name="Lakeside Clinic", address="Plot 4", location="Kampala")
+        response = self.client.get(reverse("referrals"), {"facility": clinic.pk})
+        self.assertContains(response, f'value="{clinic.pk}" selected')
