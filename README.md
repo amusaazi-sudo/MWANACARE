@@ -94,13 +94,21 @@ Caregivers can only link to records that already exist, so a facility (you, duri
 4. Open a child to add **Immunization records** and **Growth measurements**. These drive the health record page and the reminders.
 5. Under **Core → Facilities**, add partner facilities. Add `latitude` and `longitude` to show them on the map.
 
-### Sign up as a caregiver
+### Sign up and log in as a caregiver
 
-Go to `/signup/` and use the **exact phone number** entered in step 2:
+Go to `/signup/` and enter your name, the phone number entered in step 2, and a password. Spaces in the phone number are fine.
 
 - No matching number: signup is refused with a message to contact the facility.
 - Number already linked to an account: the caregiver is asked to log in instead.
 - Matching and unclaimed: the account is created and linked to that profile and its children.
+
+Caregivers then **log in with their phone number** and password. Staff and superusers log in with their username as usual.
+
+## Running the tests
+
+```bash
+python manage.py test core
+```
 
 ## Technical notes
 

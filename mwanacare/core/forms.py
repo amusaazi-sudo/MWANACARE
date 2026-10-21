@@ -1,7 +1,8 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 
+from .backends import find_profile_by_phone, normalize_phone
 from .models import Child, Note, Referral, ParentProfile
 
 
@@ -12,33 +13,56 @@ def _widget_attrs(**extra):
 
 
 class SignUpForm(UserCreationForm):
-    # Plain, short username instead of Django's default 150-char field with its
-    # "letters, digits and @/./+/-/_ only" help text.
-    username = forms.CharField(
-        max_length=30,
-        label="Name",
-        widget=forms.TextInput(attrs=_widget_attrs(maxlength="30", autocomplete="username")),
+    """Caregivers sign up with their name and the phone number their clinic registered.
+
+    The phone number becomes their login, so there is no username to remember.
+    """
+
+    first_name = forms.CharField(
+        max_length=150,
+        label="Your name",
+        widget=forms.TextInput(attrs=_widget_attrs(autocomplete="name", placeholder="e.g. Jane Nakato")),
     )
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs=_widget_attrs()))
     phone_number = forms.CharField(
-        max_length=15,
-        required=True,
-        label="Phone number on file with your health facility",
-        help_text="Enter the exact phone number your health facility used when registering you and your child.",
-        widget=forms.TextInput(attrs=_widget_attrs()),
+        max_length=20,
+        label="Phone number",
+        help_text="Use the number your health facility registered. You'll log in with it.",
+        widget=forms.TextInput(attrs=_widget_attrs(autocomplete="tel", inputmode="tel", placeholder="e.g. 0772123456")),
     )
+    email = forms.EmailField(
+        required=False,
+        label="Email (optional)",
+        widget=forms.EmailInput(attrs=_widget_attrs(autocomplete="email")),
+    )
+
+    field_order = ["first_name", "phone_number", "email", "password1", "password2"]
 
     class Meta:
         model = User
-        fields = ["username", "email", "phone_number", "password1", "password2"]
+        fields = ["first_name", "email"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.profile = None
         for field_name in ("password1", "password2"):
-            self.fields[field_name].widget.attrs.update(_widget_attrs())
+            self.fields[field_name].widget.attrs.update(_widget_attrs(autocomplete="new-password"))
             # Drop Django's default password-rules bullet list; this page only
             # enforces a simple minimum length (see validate_password_for_user).
             self.fields[field_name].help_text = ""
+        self.fields["password1"].help_text = "At least 6 characters."
+
+    def clean_phone_number(self):
+        phone = normalize_phone(self.cleaned_data["phone_number"])
+        profile = find_profile_by_phone(self.cleaned_data["phone_number"])
+        if profile is None:
+            raise forms.ValidationError(
+                "We couldn't find this number. Check it with your health facility, "
+                "or ask them to register you and your child first."
+            )
+        if profile.user_id is not None or User.objects.filter(username=phone).exists():
+            raise forms.ValidationError("This number already has an account. Please log in instead.")
+        self.profile = profile
+        return phone
 
     def validate_password_for_user(self, user, password_field_name="password2"):
         # Skip the project-wide complexity/common-password/similarity checks for
@@ -49,10 +73,29 @@ class SignUpForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
+        user.username = self.cleaned_data["phone_number"]
+        user.first_name = self.cleaned_data["first_name"].strip()
+        user.email = self.cleaned_data.get("email", "")
         if commit:
             user.save()
         return user
+
+
+class PhoneLoginForm(AuthenticationForm):
+    """Django's login form, relabelled so caregivers log in with their phone number."""
+
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        "invalid_login": "That phone number and password don't match. Check both and try again.",
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].label = "Phone number"
+        self.fields["username"].widget.attrs.update(
+            _widget_attrs(autocomplete="tel", inputmode="tel", placeholder="e.g. 0772123456")
+        )
+        self.fields["password"].widget.attrs.update(_widget_attrs(autocomplete="current-password"))
 
 
 class ParentProfileForm(forms.ModelForm):

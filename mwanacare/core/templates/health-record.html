@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}{{ child.name }}'s Record | MwanaCare{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -41,14 +42,14 @@
         <div class="vital-card">
             <div class="text-secondary small">Height</div>
             <div class="value">{{ growth.height_cm|default:"--" }}{% if growth.height_cm %} cm{% endif %}</div>
-            {% if growth.height_percentile %}<span class="pill pill-completed">{{ growth.height_percentile }}TH PERCENTILE</span>{% endif %}
+            {% if growth.height_percentile %}<span class="pill pill-completed">{{ growth.height_percentile|ordinal }} percentile</span>{% endif %}
         </div>
     </div>
     <div class="col-md-6">
         <div class="vital-card">
             <div class="text-secondary small">Weight</div>
             <div class="value">{{ growth.weight_kg|default:"--" }}{% if growth.weight_kg %} kg{% endif %}</div>
-            {% if growth.weight_percentile %}<span class="pill pill-completed">{{ growth.weight_percentile }}TH PERCENTILE</span>{% endif %}
+            {% if growth.weight_percentile %}<span class="pill pill-completed">{{ growth.weight_percentile|ordinal }} percentile</span>{% endif %}
         </div>
     </div>
     {% if not growth %}

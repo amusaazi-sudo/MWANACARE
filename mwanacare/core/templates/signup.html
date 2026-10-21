@@ -1,31 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Sign up | MwanaCare{% endblock %}
+{% block title %}Create account | MwanaCare{% endblock %}
 {% block nav %}{% endblock %}
 {% block content %}
 <div class="auth-shell">
     <div class="auth-card" style="width:min(100%, 520px);">
         <h1>
             <i class="fas fa-baby brand-icon"></i>
-            Join MwanaCare
+            Create your account
         </h1>
-        <hr>
-        <p class="text-secondary text-start">
-            Your caregiver and child records are already registered by your health facility.
-            Sign up with the phone number on file to link your account to them.
+        <p class="text-secondary text-start mb-0">
+            Your health facility has already registered you and your child.
+            Use the same phone number they have on file, and we'll link your account to your child's records.
         </p>
+        <hr>
         <form method="post" novalidate>
             {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger text-start" role="alert">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
             {% for field in form %}
-                <div class="mb-3">
-                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}:</label>
+                <div class="mb-3 text-start">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                     {{ field }}
-                    {% if field.help_text %}<div class="form-text text-start">{{ field.help_text }}</div>{% endif %}
+                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                     {{ field.errors }}
                 </div>
             {% endfor %}
-            <button class="btn btn-primary w-100 mt-2" type="submit">CREATE ACCOUNT</button>
+            <button class="btn btn-primary w-100 mt-2" type="submit">Create account</button>
         </form>
-        <p class="mt-3 mb-0 text-secondary">Already registered? <a href="{% url 'login' %}">Login</a></p>
+        <p class="mt-3 mb-0 text-secondary">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
     </div>
 </div>
 {% endblock %}

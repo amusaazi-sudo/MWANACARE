@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "core",
 ]
 
@@ -122,6 +123,12 @@ STATIC_URL = "static/"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "welcome"
 LOGIN_URL = "login"
+
+# Caregivers log in with their phone number; staff keep using their username.
+AUTHENTICATION_BACKENDS = [
+    "core.backends.PhoneNumberBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 
 # Email

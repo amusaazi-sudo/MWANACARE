@@ -4,16 +4,23 @@
 {% block content %}
 <div class="auth-shell">
     <div class="welcome-card">
-        <h1 class="fw-bold">
-            WELCOME TO
-            <br>
-            MWANACARE
-        </h1>
-        <p class="lead mt-3 mb-4">Immunization records, persistent reminders, facility finder, MwanaAI guidance, and Mwana Notes &mdash; your all-in-one maternal and child health companion.</p>
-        <div class="d-flex justify-content-center gap-2 flex-wrap">
-            <a class="btn btn-primary px-4" href="{% url 'signup' %}">CREATE ACCOUNT</a>
-            <a class="btn btn-light px-4" href="{% url 'login' %}">LOGIN</a>
+        <h1 class="fw-bold mb-2"><i class="fas fa-heartbeat me-2"></i>MwanaCare</h1>
+        <p class="lead mb-4">One companion, from home to clinic and back.</p>
+
+        <ul class="list-unstyled text-start mx-auto mb-4" style="max-width: 420px;">
+            <li class="mb-2"><i class="fas fa-bell me-2"></i>Get reminded before each vaccination is due</li>
+            <li class="mb-2"><i class="fas fa-file-medical me-2"></i>See your child's vaccination and growth record</li>
+            <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>Find a nearby clinic that can help</li>
+        </ul>
+
+        <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+            <a class="btn btn-primary px-4" href="{% url 'signup' %}">Create account</a>
+            <a class="btn btn-light px-4" href="{% url 'login' %}">Log in</a>
         </div>
+        <p class="small text-secondary mb-0">
+            New here? Your health facility registers you and your child first.
+            Then you sign up with the phone number they have on file.
+        </p>
     </div>
 </div>
 {% endblock %}

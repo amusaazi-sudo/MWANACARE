@@ -37,34 +37,19 @@ def welcome(request):
 
 
 def signup(request):
-    if request.method == "POST":
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            phone_number = form.cleaned_data["phone_number"]
-            profile = ParentProfile.objects.filter(phone_number=phone_number).first()
-            if profile is None:
-                form.add_error(
-                    "phone_number",
-                    "We couldn't find any records for this phone number. "
-                    "Please confirm it with your health facility, or ask them to register you first.",
-                )
-            elif profile.user_id is not None:
-                form.add_error(
-                    "phone_number",
-                    "An account is already linked to this phone number. Please log in instead.",
-                )
-            else:
-                user = form.save()
-                profile.user = user
-                profile.save(update_fields=["user"])
-                login(request, user)
-                messages.success(
-                    request,
-                    "Your MwanaCare account is now linked to the records your health facility has on file.",
-                )
-                return redirect("dashboard")
-    else:
-        form = SignUpForm()
+    """Create a login and link it to the records the caregiver's facility already entered.
+
+    SignUpForm checks the phone number matches an unclaimed profile.
+    """
+    form = SignUpForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        form.profile.user = user
+        form.profile.save(update_fields=["user"])
+        # Two login backends are configured, so Django needs to be told which one to use here.
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        messages.success(request, f"Welcome, {user.first_name}! Your account is linked to your child's records.")
+        return redirect("dashboard")
     return render(request, "signup.html", {"form": form})
 
 

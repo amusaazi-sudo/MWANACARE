@@ -16,10 +16,15 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.contrib.auth.views import LoginView
 from django.urls import include, path
+
+from core.forms import PhoneLoginForm
 
 urlpatterns = [
     path("", include("core.urls")),
+    # Listed before the built-in auth URLs so caregivers log in with their phone number.
+    path("accounts/login/", LoginView.as_view(authentication_form=PhoneLoginForm), name="login"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
 ]
